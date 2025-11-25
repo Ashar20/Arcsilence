@@ -1,0 +1,18 @@
+[package]
+name = "encrypted-ixs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+path = "src/lib.rs"
+
+[dependencies]
+# Arcis / Arcium dependencies
+# arcis-imports is available on crates.io
+arcis-imports = { version = "0.4.0", default-features = false }
+
+[features]
+default = []
+# Enable this feature when Arcis SDK is available
+arcis = []

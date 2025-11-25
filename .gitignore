@@ -1,0 +1,13 @@
+node_modules
+.DS_Store
+dist
+.target
+target
+.yarn
+.pnp.*
+.env*
+.solana
+**/node_modules
+**/dist
+**/.next
+**/coverage
