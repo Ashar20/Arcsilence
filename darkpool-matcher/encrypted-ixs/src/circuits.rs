@@ -15,23 +15,26 @@
 #[cfg(feature = "arcis")]
 use arcis_imports::*;
 
-// Public types for use outside the encrypted module
-/// Plain order structure (matches Order but separate for Arcis serialization)
+// Types are defined inside the #[encrypted] module below
+// Re-export them here for use outside the module
+#[cfg(feature = "arcis")]
+pub use circuits::{OrdersInput, PlainOrder, MatchResult, PlainFill};
+
+// Placeholder types when Arcis is not available (for testing)
+#[cfg(not(feature = "arcis"))]
 #[derive(Debug, Clone, Copy)]
-#[cfg_attr(feature = "arcis", derive(ArcisType))]
 pub struct PlainOrder {
     pub index: u32,
-    pub side: u8,  // 0=Bid, 1=Ask
+    pub side: u8,
     pub amount_in: u64,
     pub filled_amount_in: u64,
     pub min_amount_out: u64,
     pub created_at: i64,
-    pub status: u8,  // 0=Open, 1=PartiallyFilled, 2=Filled, 3=Cancelled
+    pub status: u8,
 }
 
-/// Plain fill structure (matches Fill but separate for Arcis serialization)
+#[cfg(not(feature = "arcis"))]
 #[derive(Debug, Clone, Copy)]
-#[cfg_attr(feature = "arcis", derive(ArcisType))]
 pub struct PlainFill {
     pub order_index: u32,
     pub counterparty_index: u32,
@@ -39,75 +42,18 @@ pub struct PlainFill {
     pub amount_out: u64,
 }
 
-/// Input type for the encrypted matching instruction
+#[cfg(not(feature = "arcis"))]
 #[derive(Debug, Clone)]
 pub struct OrdersInput {
-    pub orders: Vec<PlainOrder>,
+    pub orders: [PlainOrder; 100],
+    pub count: u32,
 }
 
-/// Result type from the encrypted matching instruction
+#[cfg(not(feature = "arcis"))]
 #[derive(Debug, Clone)]
 pub struct MatchResult {
-    pub fills: Vec<PlainFill>,
-}
-
-// Manual ArcisType implementations for structs containing Vec
-#[cfg(feature = "arcis")]
-impl ArcisType for OrdersInput {
-    fn n_values() -> usize {
-        PlainOrder::n_values() * 100  // Assume max 100 orders
-    }
-
-    fn gen_input(numbers: &mut Vec<Number>) -> Self {
-        OrdersInput {
-            orders: vec![PlainOrder::gen_input(numbers)],
-        }
-    }
-
-    fn from_values(_values: &[Number]) -> Self {
-        OrdersInput {
-            orders: Vec::new(),
-        }
-    }
-
-    fn handle_outputs(&self, outputs: &mut Vec<Number>) {
-        for order in &self.orders {
-            order.handle_outputs(outputs);
-        }
-    }
-
-    fn is_similar(&self, other: &Self) -> bool {
-        self.orders.len() == other.orders.len()
-    }
-}
-
-#[cfg(feature = "arcis")]
-impl ArcisType for MatchResult {
-    fn n_values() -> usize {
-        PlainFill::n_values() * 100  // Assume max 100 fills
-    }
-
-    fn gen_input(numbers: &mut Vec<Number>) -> Self {
-        MatchResult {
-            fills: vec![PlainFill::gen_input(numbers)],
-        }
-    }
-
-    fn from_values(_values: &[Number]) -> Self {
-        MatchResult {
-            fills: Vec::new(),
-        }
-    }
-
-    fn handle_outputs(&self, outputs: &mut Vec<Number>) {
-        for fill in &self.fills {
-            fill.handle_outputs(outputs);
-        }
-    }
-
-    fn is_similar(&self, other: &Self) -> bool {
-        self.fills.len() == other.fills.len()
-    }
+    pub fills: [PlainFill; 100],
+    pub count: u32,
 }
 
 /// Arcis encrypted module containing the MPC instruction
@@ -369,7 +315,15 @@ pub use circuits::match_orders_mpc;
 #[cfg(not(feature = "arcis"))]
 #[allow(dead_code)]
 pub fn match_orders_mpc(_input: OrdersInput) -> MatchResult {
-    MatchResult { fills: Vec::new() }
+    MatchResult {
+        fills: [PlainFill {
+            order_index: 0,
+            counterparty_index: 0,
+            amount_in: 0,
+            amount_out: 0,
+        }; 100],
+        count: 0,
+    }
 }
 
 #[cfg(test)]

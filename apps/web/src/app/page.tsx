@@ -1,15 +1,28 @@
+import { WalletButton } from '@/components/WalletButton';
+
 export default function Home() {
   return (
     <main className="page">
+      <nav style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '1rem 2rem',
+        borderBottom: '1px solid #eee'
+      }}>
+        <h2 style={{ margin: 0 }}>ArcSilence</h2>
+        <WalletButton />
+      </nav>
+
       <section className="hero">
-        <p className="eyebrow">ArcSilence</p>
-        <h1>Arcium Dark Pool on Solana</h1>
+        <p className="eyebrow">Private Dark Pool</p>
+        <h1>Trade on Solana with Arcium Encryption</h1>
         <p className="lede">
-          Connect wallet and place private orders (coming soon).
+          Connect your wallet to place private orders.
         </p>
         <p className="body">
-          Orderflow and matching will run inside Arcium&apos;s encrypted compute.
-          Settlement happens on Solana via settle_batch instructions.
+          Order matching runs inside Arcium&apos;s encrypted MPC environment.
+          Only settlement occurs on-chain via Solana program instructions.
         </p>
       </section>
     </main>

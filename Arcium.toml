@@ -10,5 +10,5 @@ version = "0.1.0"
 program = "programs/darkpool"
 
 # Path to the encrypted circuits
-encrypted_ixs = "services/solver-relayer/encrypted-ixs"
+encrypted_ixs = "darkpool-matcher/encrypted-ixs"
 
