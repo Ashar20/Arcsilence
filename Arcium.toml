@@ -1,14 +1,3 @@
 # Arcium project configuration
-# This file configures the full Arcium project including both
-# the Solana program and encrypted circuits
-
-[package]
-name = "arcsilence"
-version = "0.1.0"
-
-# Path to the Solana program (Anchor program)
-program = "programs/darkpool"
-
-# Path to the encrypted circuits
-encrypted_ixs = "darkpool-matcher/encrypted-ixs"
+# This file configures the Arcium tooling suite
 

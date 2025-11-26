@@ -8,6 +8,9 @@ export interface AppConfig {
     compDefId?: string;
     network?: string;
     apiKey?: string;
+    rpcUrl?: string;
+    walletPath?: string;
+    clusterOffset?: number | null;
   };
 }
 
@@ -36,9 +39,12 @@ export const config: AppConfig = {
   port: parseInt(getEnvVarOptional('PORT', '8080'), 10),
   arcium: {
     useReal: getBooleanEnvVar('ARCIUM_USE_REAL', false),
-    compDefId: process.env.ARCIUM_COMP_DEF_ID,
+    compDefId: process.env.ARCIUM_COMP_DEF_ID || process.env.ARCIUM_PROGRAM_ID,
     network: getEnvVarOptional('ARCIUM_NETWORK', 'testnet'),
     apiKey: process.env.ARCIUM_API_KEY,
+    rpcUrl: process.env.ARCIUM_RPC_URL || process.env.SOLANA_RPC_URL,
+    walletPath: process.env.ARCIUM_WALLET_PATH || process.env.SOLANA_WALLET_PATH,
+    clusterOffset: process.env.ARCIUM_CLUSTER_OFFSET ? parseInt(process.env.ARCIUM_CLUSTER_OFFSET, 10) : null,
   },
 };
 
