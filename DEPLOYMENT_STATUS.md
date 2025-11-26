@@ -28,72 +28,24 @@
 - ✅ Wallet connection UI ([apps/web/src/components/WalletButton.tsx](apps/web/src/components/WalletButton.tsx))
 - ✅ Build succeeds with Next.js 14
 
-## ⏸️ Blocked
+### 4. Arcium Devnet Deployment - SUCCESS (2025-11-26)
+- ✅ Built MXE program with Solana-provided rustc (`cargo-build-sbf --no-rustup-override`)
+- ✅ Deployed to devnet cluster offset **768109697** (v0.4.0) on Helius RPC
+- ✅ Program ID: **`GXMjSxNzrAee7KNdiWfGaUXh783bXyB87aW6TYvmQ3r1`**
+- ✅ MXE account: **`2zYhdtb2VVjW6vzy9yKuKNgUt1a88GdvxfLSW6JA8xgMs3iQToGwzctqvnuKLDJCCVQ5rFZJfV8NUay8e8aCECyp`**
+- ✅ Deployment signature: `4TLnh7RrWN5jKoqF6nqLXsSMnUupLVLBNA6gTwJmaJLkn5udDmybXRQyoiHfu4qX1FGyMJhZmQbbBWprmmi2pqUb`
+- ✅ Computation definition offsets registered: `[1]` (`match_orders_mpc`)
+- ✅ Solver env snippet updated in `services/solver-relayer/README.md`
 
-### Arcium Devnet Deployment
-**Blocker**: Missing Solana BPF toolchain (`solana-install` command)
+## 🎯 Recommended Next Steps
 
-**Error:**
-```
-Command not installed: `solana-install`.
-See https://github.com/anza-xyz/agave/wiki/Agave-Transition
-```
-
-**Issue**:
-- Homebrew's `solana` package doesn't include `solana-install`
-- Anchor/Arcium need BPF toolchain to compile Solana programs
-- Official Solana installer has SSL connection issues
-
-**Attempted Solutions:**
-1. ❌ Official Solana installer - SSL error
-2. ❌ Homebrew install - doesn't include `solana-install`
-3. ❌ Cargo install from Agave repository - binary not found
-
-## 🎯 Recommended Path Forward
-
-### Option 1: Test with LocalArciumClient (Immediate)
-The solver already has a working `LocalArciumClient` that simulates MPC matching locally:
-
-**File**: [services/solver-relayer/src/arciumClient.ts](services/solver-relayer/src/arciumClient.ts)
-
-```typescript
-// Currently active - no deployment needed
-export const arciumClient = new LocalArciumClient();
-```
-
-**Benefits:**
-- ✅ No infrastructure dependencies
-- ✅ Can test full order flow immediately
-- ✅ Validates all business logic
-- ✅ Unblocks web dApp development
-
-**Test Flow:**
-1. Start solver-relayer: `cd services/solver-relayer && pnpm dev`
-2. Place orders via API or web dApp
-3. Trigger matching (solver aggregates orders)
-4. Verify fills returned correctly
-5. Settlement happens on-chain (Solana program)
-
-### Option 2: Fix Solana BPF Toolchain (Later)
-**Manual Installation Steps:**
-```bash
-# Try alternative Solana installation
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-rustup component add rust-src --toolchain stable-aarch64-apple-darwin
-cargo install --git https://github.com/anza-xyz/agave.git --tag v1.18.20 solana-cli
-
-# Then rebuild and deploy
-arcium build
-arcium deploy --cluster-offset 0 --keypair-path ~/.config/solana/id.json -u d
-```
-
-### Option 3: Use Arcium Localnet (Advanced)
-Run full Arcium MXE cluster locally:
-```bash
-arcium test  # Spins up localnet + MXE nodes
-```
-
-Requires all tooling to be installed correctly.
+1. **Update solver environment** to use the live MXE (see `services/solver-relayer/README.md` for the devnet snippet).
+2. Switch `ARCIUM_USE_REAL=true` and point to:
+   - `ARCIUM_PROGRAM_ID=GXMjSxNzrAee7KNdiWfGaUXh783bXyB87aW6TYvmQ3r1`
+   - `ARCIUM_CLUSTER_OFFSET=768109697`
+   - `ARCIUM_COMP_DEF_ID=1`
+   - `ARCIUM_RPC_URL=https://devnet.helius-rpc.com/?api-key=...`
+3. Run solver against devnet orders and monitor the Arcium logs to verify encrypted submissions once the remaining TODO in `RealArciumClient` is completed.
 
 ## 📊 System Architecture Status
 
@@ -104,9 +56,9 @@ Requires all tooling to be installed correctly.
 | **Solana Program** | ✅ Ready | [programs/darkpool/](programs/darkpool/) | Uses `#[arcium_program]` |
 | **Encrypted Matcher** | ✅ Built | [build/match_orders_mpc.arcis.ir](build/match_orders_mpc.arcis.ir) | 150MB circuit |
 | **Solver (Local)** | ✅ Working | [services/solver-relayer/](services/solver-relayer/) | LocalArciumClient |
-| **Solver (Arcium)** | ⏸️ Blocked | - | Needs compDefId from deployment |
+| **Solver (Arcium)** | ⚙️ Wiring | [services/solver-relayer/](services/solver-relayer/) | Enable `ARCIUM_USE_REAL` with devnet env |
 | **Web dApp** | 🚧 In Progress | [apps/web/](apps/web/) | Wallet integration done |
-| **Arcium Devnet** | ⏸️ Blocked | - | BPF toolchain issue |
+| **Arcium Devnet** | ✅ Live | Program `GXMjSxNzrAee7KNdiWfGaUXh783bXyB87aW6TYvmQ3r1` | Cluster offset 768109697 on Helius devnet |
 
 ### Data Flow
 
@@ -153,11 +105,10 @@ User → Web dApp → Solana Program (place_order)
 3. Show order status (Open → Filled)
 4. Display transaction history
 
-### Priority 3: Arcium Deployment (When Unblocked)
-1. Fix BPF toolchain installation
-2. Deploy to Arcium devnet
-3. Get compDefId
-4. Wire RealArciumClient
+### Priority 3: Arcium Integration
+1. Roll env vars from `README.md` into solver `.env`
+2. Remove TODO fallback inside `RealArciumClient` once IDL is wired
+3. Run solver on devnet markets and monitor MXE logs
 
 ## 📝 Key Files Reference
 
@@ -183,5 +134,6 @@ User → Web dApp → Solana Program (place_order)
 2. ✅ **Installed Solana CLI** - Ready for deployment when toolchain complete
 3. ✅ **Web dApp Foundation** - Wallet integration working
 4. ✅ **Complete Codebase** - All components production-ready
+5. ✅ **Arcium Devnet Deployment** - MXE live at cluster offset 768109697 (Helius devnet)
 
 **The system is functionally complete and can be tested end-to-end using LocalArciumClient!**

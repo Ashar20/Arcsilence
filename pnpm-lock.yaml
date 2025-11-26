@@ -13,6 +13,9 @@ importers:
       '@coral-xyz/anchor':
         specifier: ^0.30.1
         version: 0.30.1(typescript@5.4.5)
+      '@solana/spl-token':
+        specifier: ^0.4.8
+        version: 0.4.14(@solana/web3.js@1.98.4)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.4.5)
       '@solana/wallet-adapter-base':
         specifier: ^0.9.27
         version: 0.9.27(@solana/web3.js@1.98.4)
@@ -28,6 +31,9 @@ importers:
       '@solana/web3.js':
         specifier: ^1.95.4
         version: 1.98.4(typescript@5.4.5)
+      bn.js:
+        specifier: ^5.2.2
+        version: 5.2.2
       next:
         specifier: 14.2.7
         version: 14.2.7(@babel/core@7.28.5)(react-dom@18.3.1)(react@18.3.1)
@@ -105,10 +111,16 @@ importers:
       '@solana/web3.js':
         specifier: ^1.95.4
         version: 1.98.4(typescript@5.4.5)
+      bn.js:
+        specifier: ^5.2.2
+        version: 5.2.2
       express:
         specifier: ^4.18.2
         version: 4.21.2
     devDependencies:
+      '@types/bn.js':
+        specifier: ^5.2.0
+        version: 5.2.0
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.25
@@ -3912,6 +3924,12 @@ packages:
     dependencies:
       '@babel/types': 7.28.5
     dev: false
+
+  /@types/bn.js@5.2.0:
+    resolution: {integrity: sha512-DLbJ1BPqxvQhIGbeu8VbUC1DiAiahHtAYvA0ZEAa4P31F7IaArc8z3C3BRQdWX4mtLQuABG4yzp76ZrS02Ui1Q==}
+    dependencies:
+      '@types/node': 20.11.30
+    dev: true
 
   /@types/body-parser@1.19.6:
     resolution: {integrity: sha512-HLFeCYgz89uk22N5Qg3dvGvsv46B8GLvKKo1zKG4NybA8U2DiEO3w9lqGg29t/tfLRJpJ6iQxnVw4OnB7MoM9g==}

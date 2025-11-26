@@ -8,4 +8,8 @@ crate-type = ["cdylib", "lib"]
 name = "darkpool_matcher"
 
 [dependencies]
-anchor-lang = "0.30.1"
+anchor-lang = { version = "0.32.1", features = ["init-if-needed"] }
+arcium-anchor = "0.4.0"
+arcium-macros = "0.4.0"
+arcium-client = { version = "0.4.0", features = ["transactions"] }
+bytemuck = { version = "1.17", features = ["derive", "min_const_generics"] }

@@ -13,6 +13,6 @@ path = "src/lib.rs"
 arcis-imports = { version = "0.4.0", default-features = false }
 
 [features]
-default = []
+default = ["arcis"]
 # Enable this feature when Arcis SDK is available
 arcis = []

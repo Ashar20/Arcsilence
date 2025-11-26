@@ -1,24 +1,17 @@
-import { AnchorProvider, Program, BN } from '@coral-xyz/anchor';
+import { AnchorProvider, Program, Idl } from '@coral-xyz/anchor';
+import BN from 'bn.js';
 import { Connection, Keypair, PublicKey, AccountMeta } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from '@solana/spl-token';
 import fs from 'fs';
 import { config } from './config.js';
 import { ExecutionPlan, Order, OrderStatus, OrderSide } from './domain.js';
 
-// TODO: Generate this IDL by running `anchor build` in programs/darkpool
-// and copying target/idl/darkpool.json to src/idl/darkpool.json
-// For now, we'll use a minimal type definition
-interface DarkpoolIdl {
-  version: string;
-  name: string;
-  instructions: any[];
-  accounts: any[];
-  types: any[];
-}
+// Load the generated IDL
+import darkpoolIdl from './idl/darkpool.json' with { type: 'json' };
 
-let programSingleton: Program<DarkpoolIdl> | null = null;
+let programSingleton: Program<Idl> | null = null;
 
-export function getProgram(): Program<DarkpoolIdl> {
+export function getProgram(): Program<Idl> {
   if (programSingleton) return programSingleton;
 
   const connection = new Connection(config.rpcUrl, 'confirmed');
@@ -41,29 +34,10 @@ export function getProgram(): Program<DarkpoolIdl> {
     preflightCommitment: 'confirmed',
   });
 
-  const programId = new PublicKey(config.programId);
+  // Use the imported IDL (which includes the program address)
+  const idl = darkpoolIdl as Idl;
 
-  // Try to load IDL from file, fallback to minimal structure
-  let idl: DarkpoolIdl;
-  try {
-    idl = JSON.parse(
-      fs.readFileSync('./src/idl/darkpool.json', 'utf8')
-    ) as DarkpoolIdl;
-  } catch (error) {
-    console.warn(
-      'IDL not found at src/idl/darkpool.json. Please generate it with: cd programs/darkpool && anchor build'
-    );
-    // Minimal IDL structure - this will need to be replaced with actual IDL
-    idl = {
-      version: '0.1.0',
-      name: 'darkpool',
-      instructions: [],
-      accounts: [],
-      types: [],
-    };
-  }
-
-  programSingleton = new Program(idl, programId, provider);
+  programSingleton = new Program(idl, provider);
 
   return programSingleton;
 }
@@ -94,18 +68,18 @@ export async function fetchOpenOrdersForMarket(
   // For now, fetch all orders and filter in JS
   // The market field offset in Order account is: 8 (discriminator) + 32 (owner) = 40
   // But we'll fetch all and filter for simplicity in MVP
-  const ordersRaw = await program.account.order.all();
+  const ordersRaw = await (program.account as any).order.all();
 
   // Filter by market and status
   const openOrders = ordersRaw
-    .filter((acc) => {
+    .filter((acc: any) => {
       const order = acc.account as any;
       const orderMarket = new PublicKey(order.market);
       return (
         orderMarket.equals(marketPk) && mapOrderStatus(order.status) === 'OPEN'
       );
     })
-    .map((acc) => {
+    .map((acc: any) => {
       const order = acc.account as any;
       return {
         pubkey: acc.publicKey.toString(),
@@ -130,7 +104,7 @@ export async function submitExecutionPlan(
   const marketPk = new PublicKey(plan.market);
 
   // Fetch market account to get vault addresses
-  const marketAccount = await program.account.market.fetch(marketPk);
+  const marketAccount = await (program.account as any).market.fetch(marketPk);
   const baseVault = new PublicKey(marketAccount.baseVault);
   const quoteVault = new PublicKey(marketAccount.quoteVault);
   const baseMint = new PublicKey(marketAccount.baseMint);
@@ -180,10 +154,10 @@ export async function submitExecutionPlan(
 
   for (const fill of plan.fills) {
     // Fetch order accounts to get owner addresses
-    const orderAccount = await program.account.order.fetch(
+    const orderAccount = await (program.account as any).order.fetch(
       new PublicKey(fill.order)
     );
-    const counterpartyAccount = await program.account.order.fetch(
+    const counterpartyAccount = await (program.account as any).order.fetch(
       new PublicKey(fill.counterparty)
     );
 

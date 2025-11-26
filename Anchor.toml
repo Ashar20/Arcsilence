@@ -1,25 +1,23 @@
 [toolchain]
 anchor_version = "0.32.1"
-solana_version = "1.18.0"
 
 [features]
 resolution = true
 skip-lint = false
 
-[programs.localnet]
-darkpool = "7W5G8fa8QUBgrHFSfzMoCwoDhVzGM3ap4NWuQg4zpv6D"
-
 [programs.devnet]
-darkpool = "7W5G8fa8QUBgrHFSfzMoCwoDhVzGM3ap4NWuQg4zpv6D"
+darkpool = "8HRmULeUKortoBGMFYYSimQQPEG7vAvTAwPX9BEijNA1"
+
+[programs.localnet]
+darkpool = "8HRmULeUKortoBGMFYYSimQQPEG7vAvTAwPX9BEijNA1"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
 build = "anchor build"
 test = "anchor test --skip-local-validator"
-

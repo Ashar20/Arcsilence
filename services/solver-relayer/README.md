@@ -17,12 +17,30 @@ The following environment variables are required:
 
 ### Arcium Integration (Optional)
 
-To use real Arcium encrypted compute instead of local matching:
+To use real Arcium encrypted compute instead of local matching set the following:
 
-- `ARCIUM_USE_REAL` - Set to `"true"` to use RealArciumClient (default: `"false"`)
-- `ARCIUM_COMP_DEF_ID` - Computation definition ID from registered Arcium program (required if `ARCIUM_USE_REAL=true`)
-- `ARCIUM_NETWORK` - Arcium network to use: `"testnet"` or `"mainnet"` (default: `"testnet"`)
-- `ARCIUM_API_KEY` - Arcium API key (optional, may be required for some networks)
+- `ARCIUM_USE_REAL` - Set to `"true"` to use `RealArciumClient` (default: `"false"`)
+- `ARCIUM_PROGRAM_ID` - MXE program ID returned by `arcium deploy`
+- `ARCIUM_CLUSTER_OFFSET` - Cluster offset you deployed against (e.g. `768109697` for v0.4.0 devnet)
+- `ARCIUM_COMP_DEF_ID` - Computation definition offset (set to `1` for `match_orders_mpc`)
+- `ARCIUM_RPC_URL` - RPC endpoint that the MXE uses (defaults to `SOLANA_RPC_URL` if omitted)
+- `ARCIUM_WALLET_PATH` - Path to the wallet used for Arcium submissions (defaults to `SOLANA_WALLET_PATH`)
+- `ARCIUM_NETWORK` / `ARCIUM_API_KEY` - Optional metadata or API key if required by your RPC provider
+
+Example devnet `.env` snippet (Helius RPC):
+
+```
+SOLANA_RPC_URL=https://devnet.helius-rpc.com/?api-key=c10f136f-baab-46d1-a4f7-83cdf19e3fdc
+DARKPOOL_PROGRAM_ID=7W5G8fa8QUBgrHFSfzMoCwoDhVzGM3ap4NWuQg4zpv6D
+DARKPOOL_ADMIN_KEYPAIR=/Users/silas/.config/solana/id.json
+
+ARCIUM_USE_REAL=true
+ARCIUM_PROGRAM_ID=GXMjSxNzrAee7KNdiWfGaUXh783bXyB87aW6TYvmQ3r1
+ARCIUM_CLUSTER_OFFSET=768109697
+ARCIUM_COMP_DEF_ID=1
+ARCIUM_RPC_URL=https://devnet.helius-rpc.com/?api-key=c10f136f-baab-46d1-a4f7-83cdf19e3fdc
+ARCIUM_WALLET_PATH=/Users/silas/.config/solana/id.json
+```
 
 ## Setup
 

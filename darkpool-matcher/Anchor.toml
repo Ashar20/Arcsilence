@@ -5,14 +5,17 @@ package_manager = "yarn"
 resolution = true
 skip-lint = false
 
+[programs.devnet]
+darkpool_matcher = "GXMjSxNzrAee7KNdiWfGaUXh783bXyB87aW6TYvmQ3r1"
+
 [programs.localnet]
-darkpool_matcher = "D2M79d9pRgdE5kSuipoVksPBPZeU4yZkPd3fx4X1UQPH"
+darkpool_matcher = "GXMjSxNzrAee7KNdiWfGaUXh783bXyB87aW6TYvmQ3r1"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
