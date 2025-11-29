@@ -11,3 +11,4 @@ target
 **/dist
 **/.next
 **/coverage
+frontend/bun.lock
