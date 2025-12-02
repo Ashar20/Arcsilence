@@ -25,3 +25,4 @@ INSERT INTO health_check (service_name, status) VALUES ('postgres', 'healthy');
 -- Create index for performance
 CREATE INDEX IF NOT EXISTS idx_health_check_service ON health_check(service_name);
 CREATE INDEX IF NOT EXISTS idx_health_check_status ON health_check(status);
+

@@ -166,3 +166,4 @@ COPY --from=solana-builder /app/programs/darkpool/target/idl/darkpool.json ./
 COPY --from=solana-builder /app/darkpool-matcher/artifacts ./arcium-artifacts/
 
 CMD ["echo", "Build artifacts ready"]
+
