@@ -1,0 +1,39 @@
+# Docker Compose Override for Development
+# This file contains development-specific overrides
+# It is automatically merged with docker-compose.yml
+
+version: '3.8'
+
+services:
+  # Development overrides for web app
+  web:
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_NODE_ENV=development
+    volumes:
+      # Mount source code for hot reload (if needed)
+      - ./apps/web/src:/app/apps/web/src:cached
+      - ./apps/web/public:/app/apps/web/public:cached
+    command: ["pnpm", "dev"]
+
+  # Development overrides for solver-relayer
+  solver-relayer:
+    environment:
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+    volumes:
+      # Mount source code for hot reload
+      - ./services/solver-relayer/src:/app/services/solver-relayer/src:cached
+    command: ["pnpm", "dev"]
+
+  # Development database (if using db profile)
+  postgres:
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: dev_password_change_in_production
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_dev_data:

@@ -59,9 +59,9 @@ cat .env  # Should show SOLANA_RPC_URL, DARKPOOL_PROGRAM_ID, etc.
 ```
 
 ### Error: "solana program show: AccountNotFound"
-**Fix**: Your program might be on different RPC. Try with Helius:
+**Fix**: Using QuickNode testnet RPC (already configured):
 ```bash
-export SOLANA_RPC_URL=https://devnet.helius-rpc.com/?api-key=YOUR_KEY
+export SOLANA_RPC_URL=https://fabled-purple-pool.solana-testnet.quiknode.pro/1788c0e4b59f72f7e893217b2d7c1b7d0f58fbf6
 solana program show CMrfhDiq5gLBwbT3nxQvGH1UTcxtaAY9r4we2PvjbjAg
 ```
 

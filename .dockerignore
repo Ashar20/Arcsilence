@@ -1,0 +1,73 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build artifacts
+target/
+**/target/
+.next/
+dist/
+build/
+
+# Development files
+.env
+.env.local
+.env.*.local
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation (keep in build context for now)
+# *.md
+# docs/
+
+# Test files
+**/*.test.ts
+**/*.test.js
+**/__tests__/
+**/coverage/
+
+# Docker files (avoid recursive copies)
+Dockerfile*
+docker-compose*.yml
+*.sh
+
+# Wallet files (should be mounted separately)
+wallet/
+
+# SSL certificates
+ssl/
+
+# Temporary files
+tmp/
+temp/
+.cache/
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+arcium-data/
+postgres_data/
+redis_data/
+
+# Development artifacts
+.nyc_output/
+.eslintcache

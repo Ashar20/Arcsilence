@@ -9,7 +9,7 @@ const PROGRAM_ID = new PublicKey('CMrfhDiq5gLBwbT3nxQvGH1UTcxtaAY9r4we2PvjbjAg')
 const BASE_MINT = new PublicKey('yXJUy2a1YgKDJ5CfngRN7djwX3Dtbv85f9jUFCgutdj');
 const QUOTE_MINT = new PublicKey('4eYgX7VZj4eQ5Vf5MbmzCgAwcbhkP1rSMhR5jZmdZN5H');
 const SOLVER_URL = 'http://localhost:8080';
-const RPC_URL = 'https://devnet.helius-rpc.com/?api-key=c10f136f-baab-46d1-a4f7-83cdf19e3fdc';
+const RPC_URL = 'https://fabled-purple-pool.solana-testnet.quiknode.pro/1788c0e4b59f72f7e893217b2d7c1b7d0f58fbf6';
 
 async function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
