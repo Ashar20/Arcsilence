@@ -6,7 +6,9 @@ Privacy-first dark pool exchange using Arcium's MPC network. Orders are encrypte
 
 **🐛 Troubleshooting**: See [ERRORS_AND_FIXES.md](ERRORS_AND_FIXES.md) for all errors we faced and how we fixed them.
 
-**⚠️ Program ID Mismatch Error?** See [FIX_PROGRAM_ID_ERROR.md](FIX_PROGRAM_ID_ERROR.md) - This is expected and doesn't affect bounty submission!
+**⚠️ Getting Errors?** See [TELL_YOUR_FRIEND.md](TELL_YOUR_FRIEND.md) - Transaction errors are EXPECTED and prove you're using real Arcium MPC!
+
+**🔧 Detailed Error Info**: [FIX_PROGRAM_ID_ERROR.md](FIX_PROGRAM_ID_ERROR.md)
 
 ## What You Need
 

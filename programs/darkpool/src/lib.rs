@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
-declare_id!("CMrfhDiq5gLBwbT3nxQvGH1UTcxtaAY9r4we2PvjbjAg");
+declare_id!("CMy5ru8L5nwnn4RK8TZJiCLs4FVkouV2PKPnuPCLFedB");
 
 #[program]
 pub mod darkpool {

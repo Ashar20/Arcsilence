@@ -1,5 +1,5 @@
 {
-  "address": "CMrfhDiq5gLBwbT3nxQvGH1UTcxtaAY9r4we2PvjbjAg",
+  "address": "CMy5ru8L5nwnn4RK8TZJiCLs4FVkouV2PKPnuPCLFedB",
   "metadata": {
     "name": "darkpool",
     "version": "0.1.0",
@@ -7,65 +7,93 @@
   },
   "instructions": [
     {
-      "name": "initialize_config",
+      "name": "cancel_order",
       "discriminator": [
-        208,
-        127,
-        21,
-        1,
-        194,
-        190,
-        196,
-        70
+        95,
+        129,
+        237,
+        240,
+        8,
+        49,
+        223,
+        132
       ],
       "accounts": [
         {
-          "name": "config",
+          "name": "order",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
                 "value": [
-                  99,
                   111,
-                  110,
-                  102,
-                  105,
-                  103
+                  114,
+                  100,
+                  101,
+                  114
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "order.market",
+                "account": "Order"
+              },
+              {
+                "kind": "account",
+                "path": "order.owner",
+                "account": "Order"
+              },
+              {
+                "kind": "account",
+                "path": "order.nonce",
+                "account": "Order"
               }
             ]
           }
         },
         {
-          "name": "payer",
+          "name": "owner",
           "writable": true,
           "signer": true
         },
         {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "name": "market"
+        },
+        {
+          "name": "user_base_account",
+          "writable": true
+        },
+        {
+          "name": "user_quote_account",
+          "writable": true
+        },
+        {
+          "name": "base_vault",
+          "writable": true
+        },
+        {
+          "name": "quote_vault",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
-      "args": [
-        {
-          "name": "admin",
-          "type": "pubkey"
-        }
-      ]
+      "args": []
     },
     {
       "name": "create_market",
       "discriminator": [
-        230,
-        228,
-        47,
-        17,
-        158,
-        187,
-        14,
-        78
+        103,
+        226,
+        97,
+        235,
+        200,
+        188,
+        251,
+        254
       ],
       "accounts": [
         {
@@ -220,16 +248,65 @@
       ]
     },
     {
+      "name": "initialize_config",
+      "discriminator": [
+        208,
+        127,
+        21,
+        1,
+        194,
+        190,
+        196,
+        70
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "admin",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
       "name": "place_order",
       "discriminator": [
-        68,
-        187,
-        217,
-        206,
-        27,
-        76,
-        5,
-        94
+        51,
+        194,
+        155,
+        175,
+        109,
+        130,
+        96,
+        106
       ],
       "accounts": [
         {
@@ -319,90 +396,16 @@
       ]
     },
     {
-      "name": "cancel_order",
-      "discriminator": [
-        95,
-        129,
-        237,
-        240,
-        8,
-        49,
-        223,
-        132
-      ],
-      "accounts": [
-        {
-          "name": "order",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  111,
-                  114,
-                  100,
-                  101,
-                  114
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "order.market"
-              },
-              {
-                "kind": "account",
-                "path": "order.owner"
-              },
-              {
-                "kind": "account",
-                "path": "order.nonce"
-              }
-            ]
-          }
-        },
-        {
-          "name": "owner",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "market"
-        },
-        {
-          "name": "user_base_account",
-          "writable": true
-        },
-        {
-          "name": "user_quote_account",
-          "writable": true
-        },
-        {
-          "name": "base_vault",
-          "writable": true
-        },
-        {
-          "name": "quote_vault",
-          "writable": true
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "settle_batch",
       "discriminator": [
-        71,
-        151,
-        133,
-        172,
-        233,
-        27,
-        175,
-        157
+        22,
+        2,
+        21,
+        223,
+        225,
+        122,
+        163,
+        214
       ],
       "accounts": [
         {
@@ -445,9 +448,7 @@
         },
         {
           "name": "arcium_signature",
-          "type": {
-            "vec": "u8"
-          }
+          "type": "bytes"
         }
       ]
     }
@@ -464,20 +465,7 @@
         250,
         204,
         130
-      ],
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "admin",
-            "type": "pubkey"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
+      ]
     },
     {
       "name": "Market",
@@ -490,138 +478,60 @@
         227,
         198,
         154
-      ],
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "base_mint",
-            "type": "pubkey"
-          },
-          {
-            "name": "quote_mint",
-            "type": "pubkey"
-          },
-          {
-            "name": "base_vault",
-            "type": "pubkey"
-          },
-          {
-            "name": "quote_vault",
-            "type": "pubkey"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
+      ]
     },
     {
       "name": "Order",
       "discriminator": [
-        172,
-        106,
-        80,
-        19,
-        217,
-        144,
-        160,
-        194
-      ],
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "owner",
-            "type": "pubkey"
-          },
-          {
-            "name": "market",
-            "type": "pubkey"
-          },
-          {
-            "name": "side",
-            "type": {
-              "defined": {
-                "name": "OrderSide"
-              }
-            }
-          },
-          {
-            "name": "amount_in",
-            "type": "u64"
-          },
-          {
-            "name": "filled_amount_in",
-            "type": "u64"
-          },
-          {
-            "name": "min_amount_out",
-            "type": "u64"
-          },
-          {
-            "name": "status",
-            "type": {
-              "defined": {
-                "name": "OrderStatus"
-              }
-            }
-          },
-          {
-            "name": "created_at",
-            "type": "i64"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
-            "name": "nonce",
-            "type": "u64"
-          }
-        ]
-      }
+        134,
+        173,
+        223,
+        185,
+        77,
+        86,
+        28,
+        51
+      ]
     }
   ],
   "events": [
     {
-      "name": "OrderPlaced",
+      "name": "BatchSettled",
       "discriminator": [
-        105,
-        13,
-        197,
-        220,
-        111,
-        194,
-        252,
-        126
+        238,
+        14,
+        187,
+        192,
+        127,
+        95,
+        104,
+        9
       ]
     },
     {
       "name": "OrderCancelled",
       "discriminator": [
-        253,
-        96,
-        239,
-        240,
-        107,
-        75,
-        165,
-        192
+        108,
+        56,
+        128,
+        68,
+        168,
+        113,
+        168,
+        239
       ]
     },
     {
-      "name": "BatchSettled",
+      "name": "OrderPlaced",
       "discriminator": [
-        86,
-        206,
-        199,
-        33,
-        253,
-        117,
-        238,
-        59
+        96,
+        130,
+        204,
+        234,
+        169,
+        219,
+        216,
+        227
       ]
     }
   ],
@@ -684,6 +594,22 @@
   ],
   "types": [
     {
+      "name": "BatchSettled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fills_count",
+            "type": "u8"
+          },
+          {
+            "name": "arcium_signature",
+            "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
       "name": "Config",
       "type": {
         "kind": "struct",
@@ -695,6 +621,30 @@
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Fill",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "order",
+            "type": "pubkey"
+          },
+          {
+            "name": "counterparty",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_in",
+            "type": "u64"
+          },
+          {
+            "name": "amount_out",
+            "type": "u64"
           }
         ]
       }
@@ -784,41 +734,7 @@
       }
     },
     {
-      "name": "OrderSide",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Bid"
-          },
-          {
-            "name": "Ask"
-          }
-        ]
-      }
-    },
-    {
-      "name": "OrderStatus",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Open"
-          },
-          {
-            "name": "PartiallyFilled"
-          },
-          {
-            "name": "Filled"
-          },
-          {
-            "name": "Cancelled"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Fill",
+      "name": "OrderCancelled",
       "type": {
         "kind": "struct",
         "fields": [
@@ -827,15 +743,11 @@
             "type": "pubkey"
           },
           {
-            "name": "counterparty",
+            "name": "owner",
             "type": "pubkey"
           },
           {
-            "name": "amount_in",
-            "type": "u64"
-          },
-          {
-            "name": "amount_out",
+            "name": "remaining",
             "type": "u64"
           }
         ]
@@ -878,39 +790,35 @@
       }
     },
     {
-      "name": "OrderCancelled",
+      "name": "OrderSide",
       "type": {
-        "kind": "struct",
-        "fields": [
+        "kind": "enum",
+        "variants": [
           {
-            "name": "order",
-            "type": "pubkey"
+            "name": "Bid"
           },
           {
-            "name": "owner",
-            "type": "pubkey"
-          },
-          {
-            "name": "remaining",
-            "type": "u64"
+            "name": "Ask"
           }
         ]
       }
     },
     {
-      "name": "BatchSettled",
+      "name": "OrderStatus",
       "type": {
-        "kind": "struct",
-        "fields": [
+        "kind": "enum",
+        "variants": [
           {
-            "name": "fills_count",
-            "type": "u8"
+            "name": "Open"
           },
           {
-            "name": "arcium_signature",
-            "type": {
-              "vec": "u8"
-            }
+            "name": "PartiallyFilled"
+          },
+          {
+            "name": "Filled"
+          },
+          {
+            "name": "Cancelled"
           }
         ]
       }

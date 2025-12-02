@@ -11,7 +11,7 @@ name = "darkpool"
 no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
-idl-build = ["anchor-lang/idl-build", "arcium-anchor/idl-build"]
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build", "arcium-anchor/idl-build"]
 signer = []
 
 [dependencies]
