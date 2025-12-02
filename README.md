@@ -4,6 +4,8 @@ Privacy-first dark pool exchange using Arcium's MPC network. Orders are encrypte
 
 **⚡ Quick Start**: See [QUICK_REFERENCE.md](QUICK_REFERENCE.md) for commands and addresses.
 
+**🐛 Troubleshooting**: See [ERRORS_AND_FIXES.md](ERRORS_AND_FIXES.md) for all errors we faced and how we fixed them.
+
 ## What You Need
 
 - Node.js 18+, pnpm

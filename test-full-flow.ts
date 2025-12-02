@@ -42,7 +42,8 @@ async function main() {
     { commitment: 'confirmed' }
   );
 
-  const program = new anchor.Program(idl as anchor.Idl, PROGRAM_ID, provider);
+  // Use 2-parameter constructor (Anchor v0.30+)
+  const program = new anchor.Program(idl as anchor.Idl, provider);
 
   // Derive PDAs
   const [marketPda] = PublicKey.findProgramAddressSync(
