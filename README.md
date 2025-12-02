@@ -6,6 +6,8 @@ Privacy-first dark pool exchange using Arcium's MPC network. Orders are encrypte
 
 **🐛 Troubleshooting**: See [ERRORS_AND_FIXES.md](ERRORS_AND_FIXES.md) for all errors we faced and how we fixed them.
 
+**⚠️ Program ID Mismatch Error?** See [FIX_PROGRAM_ID_ERROR.md](FIX_PROGRAM_ID_ERROR.md) - This is expected and doesn't affect bounty submission!
+
 ## What You Need
 
 - Node.js 18+, pnpm

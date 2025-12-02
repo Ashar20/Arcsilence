@@ -6,10 +6,10 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-darkpool = "8HRmULeUKortoBGMFYYSimQQPEG7vAvTAwPX9BEijNA1"
+darkpool = "CMrfhDiq5gLBwbT3nxQvGH1UTcxtaAY9r4we2PvjbjAg"
 
 [programs.localnet]
-darkpool = "8HRmULeUKortoBGMFYYSimQQPEG7vAvTAwPX9BEijNA1"
+darkpool = "CMrfhDiq5gLBwbT3nxQvGH1UTcxtaAY9r4we2PvjbjAg"
 
 [registry]
 url = "https://anchor.projectserum.com"
