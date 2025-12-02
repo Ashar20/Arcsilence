@@ -2,13 +2,19 @@
 
 Privacy-first dark pool exchange using Arcium's MPC network. Orders are encrypted and matched privately, preventing front-running and MEV.
 
+## 🎯 Live on Devnet!
+
+**Program ID**: `CMy5ru8L5nwnn4RK8TZJiCLs4FVkouV2PKPnuPCLFedB`
+**Market**: `DeLq8EMHPuQkn27GuMM744HMhBvi8jkFYyZvWbq1WoKo`
+**Status**: ✅ Fully deployed with working transactions
+
+---
+
 **⚡ Quick Start**: See [QUICK_REFERENCE.md](QUICK_REFERENCE.md) for commands and addresses.
 
 **🐛 Troubleshooting**: See [ERRORS_AND_FIXES.md](ERRORS_AND_FIXES.md) for all errors we faced and how we fixed them.
 
-**⚠️ Getting Errors?** See [TELL_YOUR_FRIEND.md](TELL_YOUR_FRIEND.md) - Transaction errors are EXPECTED and prove you're using real Arcium MPC!
-
-**🔧 Detailed Error Info**: [FIX_PROGRAM_ID_ERROR.md](FIX_PROGRAM_ID_ERROR.md)
+**✅ Fully Deployed**: Program, config, and market are live on devnet with working transactions!
 
 ## What You Need
 
@@ -65,10 +71,9 @@ cat .env  # Should show SOLANA_RPC_URL, DARKPOOL_PROGRAM_ID, etc.
 ```
 
 ### Error: "solana program show: AccountNotFound"
-**Fix**: Your program might be on different RPC. Try with Helius:
+**Fix**: Use the correct RPC and program ID:
 ```bash
-export SOLANA_RPC_URL=https://devnet.helius-rpc.com/?api-key=YOUR_KEY
-solana program show CMrfhDiq5gLBwbT3nxQvGH1UTcxtaAY9r4we2PvjbjAg
+solana program show CMy5ru8L5nwnn4RK8TZJiCLs4FVkouV2PKPnuPCLFedB --url devnet
 ```
 
 ### Error: "Failed to place order"
@@ -83,13 +88,9 @@ spl-token create-account 4eYgX7VZj4eQ5Vf5MbmzCgAwcbhkP1rSMhR5jZmdZN5H --url devn
 ```
 
 ### Error: "Market not found"
-**Fix**: The market needs to be created first. This is a one-time setup that's not done yet.
-Currently the UI will load but you can't place orders until a market is initialized.
-
-### Web app shows old market address
-**Fix**: Update `apps/web/.env.local`:
+**Fix**: Market is already initialized! Make sure you have the latest `.env.local`:
 ```bash
-NEXT_PUBLIC_MARKET_PUBKEY=2Av4Zp7zSQ4ZbQD9YdpULftfcAL69NXbYVR5PAKbbkDD
+NEXT_PUBLIC_MARKET_PUBKEY=DeLq8EMHPuQkn27GuMM744HMhBvi8jkFYyZvWbq1WoKo
 ```
 Then restart: `pnpm dev`
 
@@ -151,11 +152,16 @@ spl-token accounts --url devnet
 
 | Component | Address |
 |-----------|---------|
-| Darkpool Program | `CMrfhDiq5gLBwbT3nxQvGH1UTcxtaAY9r4we2PvjbjAg` |
-| Arcium MXE | `GXMjSxNzrAee7KNdiWfGaUXh783bXyB87aW6TYvmQ3r1` |
+| Darkpool Program | `CMy5ru8L5nwnn4RK8TZJiCLs4FVkouV2PKPnuPCLFedB` |
+| Config Account | `9TxfdohkD5DKuLWuEfvg7vRtEB3RNd8c1YteDAxJpt8e` |
+| Market PDA | `DeLq8EMHPuQkn27GuMM744HMhBvi8jkFYyZvWbq1WoKo` |
 | Base Token (TOKEN1) | `yXJUy2a1YgKDJ5CfngRN7djwX3Dtbv85f9jUFCgutdj` |
 | Quote Token (TOKEN2) | `4eYgX7VZj4eQ5Vf5MbmzCgAwcbhkP1rSMhR5jZmdZN5H` |
-| Market PDA | `2Av4Zp7zSQ4ZbQD9YdpULftfcAL69NXbYVR5PAKbbkDD` |
+| Base Vault | `8pEfTyTPY2wx6ZRPL49Hec48HmsrPED1LGgPoNH6uk8W` |
+| Quote Vault | `JAoucAfQ6bAYSsfDoKs4wTe9VYozWnnenuJeTW68kLdh` |
+| Arcium MXE | `GXMjSxNzrAee7KNdiWfGaUXh783bXyB87aW6TYvmQ3r1` |
+
+**Status**: ✅ All deployed and working on devnet!
 
 ## How It Works
 
@@ -187,7 +193,8 @@ ARCIUM_PROGRAM_ID=GXMjSxNzrAee7KNdiWfGaUXh783bXyB87aW6TYvmQ3r1
 
 **Web Config**: `apps/web/.env.local`
 ```bash
-NEXT_PUBLIC_DARKPOOL_PROGRAM_ID=CMrfhDiq5gLBwbT3nxQvGH1UTcxtaAY9r4we2PvjbjAg
+NEXT_PUBLIC_DARKPOOL_PROGRAM_ID=CMy5ru8L5nwnn4RK8TZJiCLs4FVkouV2PKPnuPCLFedB
+NEXT_PUBLIC_MARKET_PUBKEY=DeLq8EMHPuQkn27GuMM744HMhBvi8jkFYyZvWbq1WoKo
 NEXT_PUBLIC_SOLVER_URL=http://localhost:8080
 ```
 
@@ -200,12 +207,19 @@ NEXT_PUBLIC_SOLVER_URL=http://localhost:8080
 
 ## Bounty Submission
 
-✅ Functional Solana project (program deployed)
-✅ Front end integrated with Arcium (Next.js + Real MPC)
-✅ GitHub repo (this one)
-✅ English submission (all docs)
+✅ **Functional Solana project** - Program deployed and working on devnet
+✅ **Front end integrated with Arcium** - Next.js dApp + Real MPC (no mocks)
+✅ **Live on-chain transactions** - Config initialized, market created, orders working
+✅ **GitHub repo** - This repository with full documentation
+✅ **English submission** - All documentation in English
 
-**Status**: Ready to submit! See `endgoal.md` for bounty details.
+**Status**: ✅ COMPLETE and ready to submit! See `endgoal.md` for bounty details.
+
+### What Works:
+- ✅ Place orders on testnet (no errors)
+- ✅ Real Arcium MPC order matching
+- ✅ On-chain settlement
+- ✅ Full dark pool flow end-to-end
 
 ## License
 
