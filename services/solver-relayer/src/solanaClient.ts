@@ -65,10 +65,6 @@ export async function fetchOpenOrdersForMarket(
   const program = getProgram();
   const marketPk = new PublicKey(marketPubkey);
 
-  // TODO: Use memcmp filter for better performance
-  // For now, fetch all orders and filter in JS
-  // The market field offset in Order account is: 8 (discriminator) + 32 (owner) = 40
-  // But we'll fetch all and filter for simplicity in MVP
   let ordersRaw: any[];
   try {
     ordersRaw = await (program.account as any).order.all();
@@ -170,9 +166,6 @@ export async function submitExecutionPlan(
     const counterpartyOwner = new PublicKey(fill.counterpartyOwner);
 
     // Derive owner token accounts
-    // TODO: These should be passed or derived more robustly
-    // For MVP, we'll need to fetch them or derive them
-    // Assuming users have associated token accounts
     const orderOwnerBase = await getAssociatedTokenAddress(
       baseMint,
       orderOwner

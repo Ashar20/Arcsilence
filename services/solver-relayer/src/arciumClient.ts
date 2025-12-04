@@ -37,7 +37,6 @@ export interface ArciumClient {
  */
 export class LocalArciumClient implements ArciumClient {
   async computeExecutionPlan(orders: Order[]): Promise<ExecutionPlan> {
-    // Local matching - no encryption, runs in plaintext
     const plan = matchOrders(orders);
     return {
       ...plan,

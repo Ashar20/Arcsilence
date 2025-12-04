@@ -31,6 +31,6 @@ export interface ExecutionPlan {
   market: string;
   fills: Fill[];
   createdAt: string;
-  arciumSignature: string; // placeholder for now
+  arciumSignature: string;
 }
 

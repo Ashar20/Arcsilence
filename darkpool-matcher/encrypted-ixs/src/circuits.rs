@@ -20,7 +20,6 @@ use arcis_imports::*;
 #[cfg(feature = "arcis")]
 pub use circuits::{OrdersInput, PlainOrder, MatchResult, PlainFill};
 
-// Placeholder types when Arcis is not available (for testing)
 #[cfg(not(feature = "arcis"))]
 #[derive(Debug, Clone, Copy)]
 pub struct PlainOrder {
@@ -75,7 +74,6 @@ mod circuits {
 
     // Define types inside the encrypted module
     // NOTE: Vec doesn't implement ArcisType, so we use fixed-size arrays
-    // For now, we'll use a max of 100 orders/fills
     pub struct OrdersInput {
         pub orders: [PlainOrder; 100],
         pub count: u32,  // Actual number of orders
@@ -311,7 +309,6 @@ mod circuits {
 #[cfg(feature = "arcis")]
 pub use circuits::match_orders_mpc;
 
-// Placeholder when Arcis is not available
 #[cfg(not(feature = "arcis"))]
 #[allow(dead_code)]
 pub fn match_orders_mpc(_input: OrdersInput) -> MatchResult {
@@ -393,9 +390,7 @@ mod tests {
             plain_orders[i] = order_to_plain(order);
         }
 
-        // Since we can't actually call match_orders_mpc without Arcis runtime,
-        // we test the algorithm logic by manually converting and checking
-        // For now, we verify the conversion is correct
+        // Verify the conversion is correct
         for (i, order) in orders.iter().enumerate() {
             let plain = &plain_orders[i];
             let reconstructed = plain_to_order(plain);

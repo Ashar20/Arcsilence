@@ -158,7 +158,6 @@ pub fn match_orders(orders: &[Order]) -> ExecutionPlan {
             continue;
         }
 
-        // For MVP: simple 1:1 price check
         // Ensure matchAmount meets bid's minimum output requirement
         if match_amount < bid.min_amount_out {
             // This bid can't be filled with current ask, skip to next bid

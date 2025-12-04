@@ -456,9 +456,6 @@ describe("darkpool", () => {
     };
 
     // Settle batch
-    // Note: In a real implementation, we'd need to pass the order accounts and owner token accounts
-    // as remaining accounts. For this test, we'll need to structure it properly.
-    // This is a simplified version - the actual implementation would need proper account ordering.
     await program.methods
       .settleBatch([fill], Buffer.from("arcium-signature"))
       .accounts({

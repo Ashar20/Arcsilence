@@ -48,8 +48,6 @@ pub mod darkpool_mxe {
         // - min_amount_out: u64 -> EncryptedU64
         // - created_at: i64 -> EncryptedI64 (or EncryptedU64 if i64 not supported)
         // - status: u8 -> EncryptedU8
-        // For now, we'll pass all ciphertexts as EncryptedU8 since they're all 32-byte field elements
-        // The actual type matching will be handled by the circuit's type system
         for ct in ciphertext_arrays.iter() {
             if ct.len() != 32 {
                 return err!(ErrorCode::InvalidCiphertextLength);
@@ -159,11 +157,6 @@ pub struct MatchOrders<'info> {
 /// This defines what data the MPC computation returns
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct MatchOrdersOutput {
-    // In a real implementation, this would contain:
-    // - Matched order pairs
-    // - Fill amounts
-    // - Settlement instructions
-    // For now, we keep it simple as the matching logic runs in the MPC
     pub num_fills: u64,
 }
 

@@ -92,7 +92,6 @@ export function matchOrders(orders: Order[]): ExecutionPlan {
       continue;
     }
 
-    // For MVP: simple 1:1 price check
     // Ensure matchAmount meets bid's minimum output requirement
     if (matchAmount < bid.minAmountOut) {
       // This bid can't be filled with current ask, skip to next bid
