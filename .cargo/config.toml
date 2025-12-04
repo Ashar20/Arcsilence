@@ -1,0 +1,4 @@
+[target.bpf-unknown-unknown]
+runner = 'solana-bpf-tests'
+[build]
+target = "bpf-unknown-unknown"

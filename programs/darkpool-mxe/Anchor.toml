@@ -1,0 +1,21 @@
+[toolchain]
+anchor_version = "0.32.1"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.devnet]
+darkpool_mxe = "GXMjSxNzrAee7KNdiWfGaUXh783bXyB87aW6TYvmQ3r1"
+
+[programs.localnet]
+darkpool_mxe = "GXMjSxNzrAee7KNdiWfGaUXh783bXyB87aW6TYvmQ3r1"
+
+[provider]
+cluster = "devnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+build = "anchor build"
+
+
