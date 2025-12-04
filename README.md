@@ -1,226 +1,160 @@
-# ArcSilence - Private Dark Pool on Solana
+# Arcsilence
 
-Privacy-first dark pool exchange using Arcium's MPC network. Orders are encrypted and matched privately, preventing front-running and MEV.
+**Private Dark Pool Execution for Solana DeFi**
 
-## 🎯 Live on Devnet!
+Arcsilence enables private order matching using Arcium encrypted compute, built for DAOs, funds, and protocols needing MEV-safe, alpha-preserving execution.
 
 **Program ID**: `CMy5ru8L5nwnn4RK8TZJiCLs4FVkouV2PKPnuPCLFedB`
+
 **Market**: `DeLq8EMHPuQkn27GuMM744HMhBvi8jkFYyZvWbq1WoKo`
-**Status**: ✅ Fully deployed with working transactions
 
----
+## Problem
 
-**⚡ Quick Start**: See [QUICK_REFERENCE.md](QUICK_REFERENCE.md) for commands and addresses.
+Public DeFi leaks alpha and invites MEV:
+- Large swaps and treasury rebalances are fully visible on-chain
+- MEV bots front-run, back-run, and sandwich high-value orders
+- Competitors infer rebalance and hedging strategies from on-chain behavior
+- Result: worse prices, higher slippage, and long-term strategy decay
 
-**🐛 Troubleshooting**: See [ERRORS_AND_FIXES.md](ERRORS_AND_FIXES.md) for all errors we faced and how we fixed them.
+## Solution
 
-**✅ Fully Deployed**: Program, config, and market are live on devnet with working transactions!
+Arcsilence provides an encrypted dark pool and rebalancer:
+- Users submit swap/rebalance intents → processed in encrypted compute
+- Orders fetched from Solana, encrypted, matched via Arcium MPC, then settled on-chain
+- Only final fills and transfers visible; order book and strategy logic stay private
 
-## What You Need
+**Key Benefits:**
+- Lower MEV and slippage
+- Protected strategy/alpha (no visible pre-trade intent)
+- Composable with existing Solana DEXs and aggregators
 
-- Node.js 18+, pnpm
-- Solana CLI tools
-- Phantom or Solflare wallet with devnet SOL
-- Rust and Anchor (if building programs)
+## Architecture
 
-## Quick Start
+### On-Chain (Solana + Anchor, Rust)
+- **Darkpool Program**: Order PDAs, base/quote token vaults, batch settlement
+- **Darkpool-MXE Program**: Arcium MPC integration for encrypted order matching
 
-```bash
-# 1. Install dependencies
-pnpm install
+### Off-Chain (TypeScript/Node.js)
+- **Solver-Relayer Service**: Fetches orders, encrypts data, submits to MPC, triggers settlement
+- **Arcium MPC Integration**: Real MXE flow with encrypted orders → MPC matching → attested results
 
-# 2. Set up environment
-cd services/solver-relayer
-cp .env.example .env  # Or use existing .env
-# Edit .env and set your paths
+### Frontend
+- React-based trading interface with end-to-end test flow visualization
 
-cd ../apps/web
-cp .env.local.example .env.local  # Or use existing .env.local
+## Tech Stack
 
-# 3. Build everything
-cd ../..
-pnpm build
-```
+- **Blockchain**: Solana devnet, Anchor Framework, SPL Token
+- **Privacy/MPC**: Arcium MPC Network, x25519 key exchange, RescueCipher encryption
+- **Application**: TypeScript/Node.js, Express.js API
+- **Libraries**: @coral-xyz/anchor, @solana/web3.js, @arcium-hq/client, @solana/spl-token
 
-## Running It
+## Security & Privacy Guarantees
 
-### Start Solver (Terminal 1)
-```bash
-cd services/solver-relayer
-source .env
-node dist/index.js
-```
+- Orders encrypted before MPC submission using x25519 + RescueCipher
+- Matching algorithm executed inside Arcium's MPC network
+- MPC attestation + on-chain settlement = no single point of trust
+- Tokens held in program-controlled vaults; fills and state changes auditable on Solana
 
-You should see: `Using Real Arcium client` and `solver-relayer listening on :8080`
+## Installation
 
-### Start Web App (Terminal 2)
-```bash
-cd apps/web
-pnpm dev
-```
+### Prerequisites
 
-Open http://localhost:3000
+- Node.js 18+ and pnpm
+- Rust 1.70+ and Solana CLI
+- Anchor Framework
+- Arcium SDK and credentials
 
-## Common Errors & Fixes
+### Setup
 
-### Error: "Missing required environment variable"
-**Fix**: Make sure .env file exists and has all variables:
-```bash
-cd services/solver-relayer
-cat .env  # Should show SOLANA_RPC_URL, DARKPOOL_PROGRAM_ID, etc.
-```
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Ashar20/Arcsilence.git
+   cd Arcsilence
+   ```
 
-### Error: "solana program show: AccountNotFound"
-**Fix**: Use the correct RPC and program ID:
-```bash
-solana program show CMy5ru8L5nwnn4RK8TZJiCLs4FVkouV2PKPnuPCLFedB --url devnet
-```
+2. **Install dependencies**
+   ```bash
+   pnpm install
+   ```
 
-### Error: "Failed to place order"
-**Fix**: You need token accounts for both tokens:
-```bash
-# Check your token accounts
-spl-token accounts --url devnet
+3. **Build Solana programs**
+   ```bash
+   anchor build
+   ```
 
-# Create if missing
-spl-token create-account yXJUy2a1YgKDJ5CfngRN7djwX3Dtbv85f9jUFCgutdj --url devnet
-spl-token create-account 4eYgX7VZj4eQ5Vf5MbmzCgAwcbhkP1rSMhR5jZmdZN5H --url devnet
-```
+4. **Configure environment**
+   ```bash
+   cd services/solver-relayer
+   cp .env.example .env
+   # Edit .env with your Solana keypair path and Arcium credentials
+   ```
 
-### Error: "Market not found"
-**Fix**: Market is already initialized! Make sure you have the latest `.env.local`:
-```bash
-NEXT_PUBLIC_MARKET_PUBKEY=DeLq8EMHPuQkn27GuMM744HMhBvi8jkFYyZvWbq1WoKo
-```
-Then restart: `pnpm dev`
+5. **Deploy programs to devnet**
+   ```bash
+   anchor deploy --provider.cluster devnet
+   ```
 
-## Testing
+6. **Start the solver-relayer service**
+   ```bash
+   cd services/solver-relayer
+   source .env
+   pnpm build
+   node dist/index.js
+   ```
 
-### Check Deployment Status
-Quick check to verify all programs and tokens are deployed:
-```bash
-./check-deployment.sh
-```
+7. **Run end-to-end test**
+   ```bash
+   pnpm exec tsx test-end-to-end.ts
+   ```
 
-Shows:
-- Darkpool program details
-- Arcium MXE program details
-- Token mints info
-- Market account status
-- Explorer links
+8. **Start frontend (optional)**
+   ```bash
+   cd frontend
+   pnpm install
+   pnpm dev
+   ```
 
-### Run Full End-to-End Test
-This script demonstrates the ENTIRE flow with real Arcium MPC:
-```bash
-./run-test.sh
-```
+## Usage
 
-What it does:
-1. ✅ Initializes config (if needed)
-2. ✅ Creates market (if needed)
-3. ✅ Checks token accounts
-4. ✅ Places BID and ASK orders
-5. ✅ Triggers Arcium MPC matching (real encryption!)
-6. ✅ Settles matches on-chain
-7. ✅ Verifies final state
+### End-to-End Test Flow
 
-**NOTE**: Make sure solver is running first! This takes ~60 seconds.
+The test script demonstrates the complete dark pool flow:
 
-### Manual Tests
+1. **Setup**: Initialize token accounts and check balances
+2. **Solver Check**: Verify solver service is running
+3. **Place BID Order**: Buy TOKEN1 with TOKEN2
+4. **Place ASK Order**: Sell TOKEN1 for TOKEN2
+5. **MPC Matching**: Trigger encrypted order matching via Arcium
+6. **Settlement**: Verify balances and vault state after matching
 
-#### Test Solver Health
-```bash
-curl http://localhost:8080/health
-# Should return: {"ok":true}
-```
+### API Endpoints
 
-#### Test Web App
-```bash
-curl http://localhost:3000
-# Should return: HTML with "ArcSilence"
-```
+The solver-relayer exposes:
 
-#### Check Your Tokens
-```bash
-spl-token accounts --url devnet
-# Should show:
-# yXJUy2a1YgKDJ5CfngRN7djwX3Dtbv85f9jUFCgutdj   1000
-# 4eYgX7VZj4eQ5Vf5MbmzCgAwcbhkP1rSMhR5jZmdZN5H  10000
-```
-
-## Deployed Addresses (Devnet)
-
-| Component | Address |
-|-----------|---------|
-| Darkpool Program | `CMy5ru8L5nwnn4RK8TZJiCLs4FVkouV2PKPnuPCLFedB` |
-| Config Account | `9TxfdohkD5DKuLWuEfvg7vRtEB3RNd8c1YteDAxJpt8e` |
-| Market PDA | `DeLq8EMHPuQkn27GuMM744HMhBvi8jkFYyZvWbq1WoKo` |
-| Base Token (TOKEN1) | `yXJUy2a1YgKDJ5CfngRN7djwX3Dtbv85f9jUFCgutdj` |
-| Quote Token (TOKEN2) | `4eYgX7VZj4eQ5Vf5MbmzCgAwcbhkP1rSMhR5jZmdZN5H` |
-| Base Vault | `8pEfTyTPY2wx6ZRPL49Hec48HmsrPED1LGgPoNH6uk8W` |
-| Quote Vault | `JAoucAfQ6bAYSsfDoKs4wTe9VYozWnnenuJeTW68kLdh` |
-| Arcium MXE | `GXMjSxNzrAee7KNdiWfGaUXh783bXyB87aW6TYvmQ3r1` |
-
-**Status**: ✅ All deployed and working on devnet!
-
-## How It Works
-
-1. **User places order** → Stored on-chain with encrypted details
-2. **Operator clicks "Run Match"** → Solver fetches orders
-3. **Solver encrypts orders** → x25519 + RescueCipher encryption
-4. **Submit to Arcium MPC** → Computation runs in secure enclave
-5. **MPC returns matches** → Solver decrypts results
-6. **Settlement on-chain** → Darkpool program transfers tokens
-
-**No mocks, no simulation** - Real Arcium MPC integration.
+- `POST /match-and-settle` - Trigger MPC matching and settlement
+- `GET /health` - Health check endpoint
 
 ## Project Structure
 
 ```
-├── programs/darkpool/          # Solana program (Anchor)
-├── services/solver-relayer/    # Node.js solver with Arcium MPC
-├── apps/web/                   # Next.js dApp
-└── endgoal.md                  # Bounty requirements
+Arcsilence/
+├── programs/
+│   ├── darkpool/          # Main dark pool program
+│   └── darkpool-mxe/      # Arcium MPC integration program
+├── services/
+│   └── solver-relayer/    # Off-chain solver and relayer service
+├── frontend/              # React trading interface
+└── test-end-to-end.ts     # End-to-end integration test
 ```
 
-## Key Files
+## Who It Serves
 
-**Solver Config**: `services/solver-relayer/.env`
-```bash
-ARCIUM_USE_REAL=true  # ← Real MPC, not mock!
-ARCIUM_PROGRAM_ID=GXMjSxNzrAee7KNdiWfGaUXh783bXyB87aW6TYvmQ3r1
-```
+- **DAO Treasuries**: Large rebalances without signaling intent
+- **POL Managers**: Protocol-owned liquidity management
+- **Funds & Market Makers**: Strategy execution without alpha leakage
 
-**Web Config**: `apps/web/.env.local`
-```bash
-NEXT_PUBLIC_DARKPOOL_PROGRAM_ID=CMy5ru8L5nwnn4RK8TZJiCLs4FVkouV2PKPnuPCLFedB
-NEXT_PUBLIC_MARKET_PUBKEY=DeLq8EMHPuQkn27GuMM744HMhBvi8jkFYyZvWbq1WoKo
-NEXT_PUBLIC_SOLVER_URL=http://localhost:8080
-```
+## Track Fit
 
-**Arcium Integration**: `services/solver-relayer/src/arciumClient.ts`
-- Lines 106-109: x25519 encryption
-- Lines 166-168: RescueCipher encrypt
-- Lines 210-227: MPC submission
-- Lines 233-238: Await finalization
-- Line 251: **NO FALLBACK** (throws on error)
-
-## Bounty Submission
-
-✅ **Functional Solana project** - Program deployed and working on devnet
-✅ **Front end integrated with Arcium** - Next.js dApp + Real MPC (no mocks)
-✅ **Live on-chain transactions** - Config initialized, market created, orders working
-✅ **GitHub repo** - This repository with full documentation
-✅ **English submission** - All documentation in English
-
-**Status**: ✅ COMPLETE and ready to submit! See `endgoal.md` for bounty details.
-
-### What Works:
-- ✅ Place orders on testnet (no errors)
-- ✅ Real Arcium MPC order matching
-- ✅ On-chain settlement
-- ✅ Full dark pool flow end-to-end
-
-## License
-
-MIT
+- **Directly targets**: "Private DeFi & Trading"
+- **Demonstrates**: Full pipeline from on-chain orders → Arcium encrypted compute → on-chain settlement
+- **Privacy**: Keeps orders, positions, and strategies confidential while remaining verifiable
