@@ -2,11 +2,15 @@ import { Connection, Keypair, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } fro
 import { Program, AnchorProvider, Wallet, BN } from '@coral-xyz/anchor';
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress, createAssociatedTokenAccountInstruction } from '@solana/spl-token';
 import * as fs from 'fs';
-import idl from './target/idl/darkpool.json';
+import darkpoolIdl from './target/idl/darkpool.json';
 import axios from 'axios';
 
 const RPC_URL = 'https://api.devnet.solana.com';
+// Use the OLD program ID that matches the compiled IDL and has the market set up
 const PROGRAM_ID = new PublicKey('CMy5ru8L5nwnn4RK8TZJiCLs4FVkouV2PKPnuPCLFedB');
+
+// Make IDL use the correct program ID dynamically
+const idl = { ...darkpoolIdl, address: PROGRAM_ID.toBase58() } as any;
 const BASE_TOKEN_MINT = new PublicKey('yXJUy2a1YgKDJ5CfngRN7djwX3Dtbv85f9jUFCgutdj');
 const QUOTE_TOKEN_MINT = new PublicKey('4eYgX7VZj4eQ5Vf5MbmzCgAwcbhkP1rSMhR5jZmdZN5H');
 const SOLVER_URL = 'http://localhost:8080';
@@ -95,11 +99,11 @@ async function testEndToEnd() {
     process.exit(1);
   }
 
-  // Place BID order (buy 10 TOKEN1 with TOKEN2)
+  // Place BID order (buy 10 TOKEN1 with 10 TOKEN2 at 1:1 price)
   console.log('3️⃣  Placing BID order (buying TOKEN1 with TOKEN2)...');
   const bidNonce = Date.now();
-  const bidAmountIn = new BN(1000); // 1000 TOKEN2 (smallest units)
-  const bidMinOut = new BN(9); // Expect at least 9 TOKEN1
+  const bidAmountIn = new BN(10); // 10 TOKEN2 to spend
+  const bidMinOut = new BN(10); // Expect at least 10 TOKEN1 in return (1:1 price)
 
   const [bidOrderPDA] = PublicKey.findProgramAddressSync(
     [
@@ -144,11 +148,11 @@ async function testEndToEnd() {
     process.exit(1);
   }
 
-  // Place ASK order (sell 10 TOKEN1 for TOKEN2)
+  // Place ASK order (sell 10 TOKEN1 for 10 TOKEN2 at 1:1 price)
   console.log('4️⃣  Placing ASK order (selling TOKEN1 for TOKEN2)...');
   const askNonce = Date.now() + 1;
-  const askAmountIn = new BN(10); // 10 TOKEN1
-  const askMinOut = new BN(900); // Expect at least 900 TOKEN2
+  const askAmountIn = new BN(10); // 10 TOKEN1 to sell
+  const askMinOut = new BN(10); // Expect at least 10 TOKEN2 in return (1:1 price)
 
   const [askOrderPDA] = PublicKey.findProgramAddressSync(
     [

@@ -23,6 +23,8 @@ export interface Fill {
   counterparty: string;
   amountIn: bigint;
   amountOut: bigint;
+  orderOwner: string;
+  counterpartyOwner: string;
 }
 
 export interface ExecutionPlan {

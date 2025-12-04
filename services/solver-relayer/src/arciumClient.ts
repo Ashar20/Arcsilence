@@ -3,6 +3,7 @@ import { matchOrders } from './matcher.js';
 import { config } from './config.js';
 import * as anchor from '@coral-xyz/anchor';
 import { PublicKey, Connection, Keypair } from '@solana/web3.js';
+import BN from 'bn.js';
 import { randomBytes } from 'crypto';
 import { readFileSync } from 'fs';
 import {
@@ -88,6 +89,9 @@ export class RealArciumClient implements ArciumClient {
       throw new Error('No orders provided');
     }
 
+    // Account-based storage supports 50-100+ orders
+    console.log(`[Arcium] Processing ${orders.length} orders using account-based data storage`);
+
     const market = orders[0].market;
 
     console.log(`[Arcium] Starting MPC computation for ${orders.length} orders`);
@@ -108,7 +112,7 @@ export class RealArciumClient implements ArciumClient {
     const sharedSecret = x25519.getSharedSecret(privateKey, mxePublicKey);
     const cipher = new RescueCipher(sharedSecret);
 
-    // 3. Serialize orders to fixed-size array format (max 100 orders)
+    // 3. Serialize orders WITHOUT padding - only actual orders
     const orderMap = new Map<number, Order>();
     const ordersArray: Array<{
       index: bigint;
@@ -120,31 +124,19 @@ export class RealArciumClient implements ArciumClient {
       status: bigint;
     }> = [];
 
-    for (let i = 0; i < 100; i++) {
-      if (i < orders.length) {
-        const order = orders[i];
-        orderMap.set(i, order);
-        ordersArray.push({
-          index: BigInt(i),
-          side: order.side === 'BID' ? 0n : 1n,
-          amount_in: order.amountIn,
-          filled_amount_in: order.filledAmountIn,
-          min_amount_out: order.minAmountOut,
-          created_at: BigInt(order.createdAt),
-          status: 0n, // OPEN
-        });
-      } else {
-        // Padding with zero orders
-        ordersArray.push({
-          index: BigInt(i),
-          side: 0n,
-          amount_in: 0n,
-          filled_amount_in: 0n,
-          min_amount_out: 0n,
-          created_at: 0n,
-          status: 0n,
-        });
-      }
+    // Only serialize actual orders, NO PADDING
+    for (let i = 0; i < orders.length; i++) {
+      const order = orders[i];
+      orderMap.set(i, order);
+      ordersArray.push({
+        index: BigInt(i),
+        side: order.side === 'BID' ? 0n : 1n,
+        amount_in: order.amountIn,
+        filled_amount_in: order.filledAmountIn,
+        min_amount_out: order.minAmountOut,
+        created_at: BigInt(order.createdAt),
+        status: 0n, // OPEN
+      });
     }
 
     // 4. Flatten order data into plaintext array for encryption
@@ -168,7 +160,7 @@ export class RealArciumClient implements ArciumClient {
     console.log(`[Arcium] Encrypted ${plaintext.length} field values`);
 
     // 6. Submit computation to Arcium
-    const computationOffset = new anchor.BN(randomBytes(8).toString('hex'), 16);
+    const computationOffset = new BN(randomBytes(8).toString('hex'), 16);
     const clusterAccount = this.getClusterAccount();
 
     // Build instruction data
@@ -177,7 +169,7 @@ export class RealArciumClient implements ArciumClient {
       computationOffset,
       ciphertextArrays: ciphertext.map((ct) => Array.from(ct)),
       publicKey: Array.from(publicKey),
-      nonce: new anchor.BN(deserializeLE(nonce).toString()),
+      nonce: new BN(deserializeLE(nonce).toString()),
       orderCount: orders.length,
     };
 
@@ -205,19 +197,45 @@ export class RealArciumClient implements ArciumClient {
         compDef: compDefAccount.toBase58(),
       });
 
-      // Submit the queue computation transaction using Arcium SDK helpers
-      // The SDK provides the instruction builder internally
-      const instruction = await this.buildQueueComputationInstruction({
-        computationAccount,
-        clusterAccount,
-        mxeAccount,
-        mempoolAccount,
-        executingPoolAccount,
-        compDefAccount,
-        computationOffset,
-        ciphertext: ciphertext as any,
-        publicKey: publicKey as any,
-        nonce: nonce as any,
+      // Build the queue computation instruction with correct discriminator
+      const keys = [
+        { pubkey: computationAccount, isSigner: false, isWritable: true },
+        { pubkey: clusterAccount, isSigner: false, isWritable: true },
+        { pubkey: mxeAccount, isSigner: false, isWritable: false },
+        { pubkey: mempoolAccount, isSigner: false, isWritable: true },
+        { pubkey: executingPoolAccount, isSigner: false, isWritable: true },
+        { pubkey: compDefAccount, isSigner: false, isWritable: false },
+        { pubkey: this.wallet.publicKey, isSigner: true, isWritable: true },
+        { pubkey: anchor.web3.SystemProgram.programId, isSigner: false, isWritable: false },
+      ];
+
+      // Correct discriminator from Arcium IDL: [1, 149, 103, 13, 102, 227, 93, 164]
+      const discriminator = Buffer.from([1, 149, 103, 13, 102, 227, 93, 164]);
+
+      // Serialize ciphertext arrays (vec of vec<u8>)
+      const serializeCiphertextArrays = (ct: Uint8Array[]): Buffer => {
+        const lengthPrefix = Buffer.alloc(4);
+        lengthPrefix.writeUInt32LE(ct.length, 0);
+        const arrays = ct.map(arr => {
+          const len = Buffer.alloc(4);
+          len.writeUInt32LE(arr.length, 0);
+          return Buffer.concat([len, Buffer.from(arr)]);
+        });
+        return Buffer.concat([lengthPrefix, ...arrays]);
+      };
+
+      const data = Buffer.concat([
+        discriminator,
+        computationOffset.toArrayLike(Buffer, 'le', 8),
+        serializeCiphertextArrays(ciphertext as any),
+        Buffer.from(publicKey),
+        Buffer.from(nonce),
+      ]);
+
+      const instruction = new anchor.web3.TransactionInstruction({
+        keys,
+        programId: this.programId,
+        data,
       });
 
       const tx = await provider.sendAndConfirm(
@@ -297,64 +315,6 @@ export class RealArciumClient implements ArciumClient {
       arciumSignature: finalizeTx,
     };
     */
-  }
-
-  private async buildQueueComputationInstruction(params: {
-    computationAccount: PublicKey;
-    clusterAccount: PublicKey;
-    mxeAccount: PublicKey;
-    mempoolAccount: PublicKey;
-    executingPoolAccount: PublicKey;
-    compDefAccount: PublicKey;
-    computationOffset: anchor.BN;
-    ciphertext: any;
-    publicKey: any;
-    nonce: any;
-  }): Promise<anchor.web3.TransactionInstruction> {
-    // Build the queue computation instruction manually
-    // This is the standard Arcium queueComputation instruction format
-
-    const keys = [
-      { pubkey: params.computationAccount, isSigner: false, isWritable: true },
-      { pubkey: params.clusterAccount, isSigner: false, isWritable: true },
-      { pubkey: params.mxeAccount, isSigner: false, isWritable: false },
-      { pubkey: params.mempoolAccount, isSigner: false, isWritable: true },
-      { pubkey: params.executingPoolAccount, isSigner: false, isWritable: true },
-      { pubkey: params.compDefAccount, isSigner: false, isWritable: false },
-      { pubkey: this.wallet.publicKey, isSigner: true, isWritable: true },
-      { pubkey: anchor.web3.SystemProgram.programId, isSigner: false, isWritable: false },
-    ];
-
-    // Serialize the instruction data
-    // Format: [discriminator (8 bytes), computation_offset, ciphertext_arrays, public_key, nonce]
-    const discriminator = Buffer.from([76, 149, 71, 116, 146, 101, 174, 165]); // queueComputation discriminator
-    const data = Buffer.concat([
-      discriminator,
-      params.computationOffset.toArrayLike(Buffer, 'le', 8),
-      this.serializeCiphertextArrays(params.ciphertext),
-      Buffer.from(params.publicKey),
-      Buffer.from(params.nonce),
-    ]);
-
-    return new anchor.web3.TransactionInstruction({
-      keys,
-      programId: this.programId,
-      data,
-    });
-  }
-
-  private serializeCiphertextArrays(ciphertext: Uint8Array[]): Buffer {
-    // Serialize array of byte arrays for Borsh encoding
-    const lengthPrefix = Buffer.alloc(4);
-    lengthPrefix.writeUInt32LE(ciphertext.length, 0);
-
-    const arrays = ciphertext.map(ct => {
-      const len = Buffer.alloc(4);
-      len.writeUInt32LE(ct.length, 0);
-      return Buffer.concat([len, Buffer.from(ct)]);
-    });
-
-    return Buffer.concat([lengthPrefix, ...arrays]);
   }
 
   private async getMXEPublicKeyWithRetry(

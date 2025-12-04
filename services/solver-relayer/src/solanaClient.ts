@@ -34,8 +34,9 @@ export function getProgram(): Program<Idl> {
     preflightCommitment: 'confirmed',
   });
 
-  // Use the imported IDL (which includes the program address)
-  const idl = darkpoolIdl as Idl;
+  // Use the imported IDL and override the address with config.programId
+  // This makes the program ID dynamic instead of relying on the hardcoded IDL address
+  const idl = { ...darkpoolIdl, address: config.programId } as Idl;
 
   programSingleton = new Program(idl, provider);
 
@@ -68,31 +69,41 @@ export async function fetchOpenOrdersForMarket(
   // For now, fetch all orders and filter in JS
   // The market field offset in Order account is: 8 (discriminator) + 32 (owner) = 40
   // But we'll fetch all and filter for simplicity in MVP
-  const ordersRaw = await (program.account as any).order.all();
+  let ordersRaw: any[];
+  try {
+    ordersRaw = await (program.account as any).order.all();
+  } catch (error: any) {
+    console.error('Error fetching all orders:', error.message);
+    // If we can't fetch orders due to incompatible accounts, return empty array
+    return [];
+  }
 
-  // Filter by market and status
-  const openOrders = ordersRaw
-    .filter((acc: any) => {
+  // Filter by market and status, skipping any incompatible accounts
+  const openOrders: Order[] = [];
+  for (const acc of ordersRaw) {
+    try {
       const order = acc.account as any;
       const orderMarket = new PublicKey(order.market);
-      return (
-        orderMarket.equals(marketPk) && mapOrderStatus(order.status) === 'OPEN'
-      );
-    })
-    .map((acc: any) => {
-      const order = acc.account as any;
-      return {
-        pubkey: acc.publicKey.toString(),
-        owner: new PublicKey(order.owner).toString(),
-        market: new PublicKey(order.market).toString(),
-        side: mapOrderSide(order.side),
-        amountIn: BigInt(order.amountIn.toString()),
-        filledAmountIn: BigInt(order.filledAmountIn.toString()),
-        minAmountOut: BigInt(order.minAmountOut.toString()),
-        status: mapOrderStatus(order.status),
-        createdAt: BigInt(order.createdAt.toString()),
-      } as Order;
-    });
+
+      if (orderMarket.equals(marketPk) && mapOrderStatus(order.status) === 'OPEN') {
+        openOrders.push({
+          pubkey: acc.publicKey.toString(),
+          owner: new PublicKey(order.owner).toString(),
+          market: new PublicKey(order.market).toString(),
+          side: mapOrderSide(order.side),
+          amountIn: BigInt(order.amountIn.toString()),
+          filledAmountIn: BigInt(order.filledAmountIn.toString()),
+          minAmountOut: BigInt(order.minAmountOut.toString()),
+          status: mapOrderStatus(order.status),
+          createdAt: BigInt(order.createdAt.toString()),
+        });
+      }
+    } catch (error: any) {
+      // Skip incompatible order accounts (e.g., old account structure)
+      console.log(`⚠️  Skipping incompatible order account ${acc.publicKey?.toString() || 'unknown'}: ${error.message}`);
+      continue;
+    }
+  }
 
   return openOrders;
 }
@@ -153,16 +164,10 @@ export async function submitExecutionPlan(
   ];
 
   for (const fill of plan.fills) {
-    // Fetch order accounts to get owner addresses
-    const orderAccount = await (program.account as any).order.fetch(
-      new PublicKey(fill.order)
-    );
-    const counterpartyAccount = await (program.account as any).order.fetch(
-      new PublicKey(fill.counterparty)
-    );
-
-    const orderOwner = new PublicKey(orderAccount.owner);
-    const counterpartyOwner = new PublicKey(counterpartyAccount.owner);
+    // Use pre-populated owner addresses from the execution plan
+    // This avoids fetching potentially incompatible order accounts
+    const orderOwner = new PublicKey(fill.orderOwner);
+    const counterpartyOwner = new PublicKey(fill.counterpartyOwner);
 
     // Derive owner token accounts
     // TODO: These should be passed or derived more robustly
@@ -233,5 +238,91 @@ export async function submitExecutionPlan(
     .rpc();
 
   return txSig;
+}
+
+/**
+ * Clean up filled orders by cancelling them and reclaiming rent
+ * This should be called after successful settlement
+ */
+export async function cleanupFilledOrders(
+  plan: ExecutionPlan
+): Promise<{ closed: number; failed: number }> {
+  const program = getProgram();
+  const marketPk = new PublicKey(plan.market);
+
+  // Fetch market account to get mint addresses and vaults
+  const marketAccount = await (program.account as any).market.fetch(marketPk);
+  const baseMint = new PublicKey(marketAccount.baseMint);
+  const quoteMint = new PublicKey(marketAccount.quoteMint);
+  const baseVault = new PublicKey(marketAccount.baseVault);
+  const quoteVault = new PublicKey(marketAccount.quoteVault);
+
+  console.log(`🧹 Cleaning up ${plan.fills.length} filled orders...`);
+
+  let closed = 0;
+  let failed = 0;
+
+  for (const fill of plan.fills) {
+    try {
+      const orderPubkey = new PublicKey(fill.order);
+
+      // Fetch order to check if it's fully filled
+      const orderAccount = await (program.account as any).order.fetch(
+        orderPubkey
+      );
+
+      // Check if order is fully filled
+      const amountIn = new BN(orderAccount.amountIn.toString());
+      const filledAmountIn = new BN(orderAccount.filledAmountIn.toString());
+
+      if (!filledAmountIn.eq(amountIn)) {
+        // Order not fully filled, skip cleanup
+        continue;
+      }
+
+      // Order is fully filled, close it
+      const ownerPubkey = new PublicKey(orderAccount.owner);
+
+      // Get user token accounts
+      const userBaseAccount = await getAssociatedTokenAddress(
+        baseMint,
+        ownerPubkey
+      );
+      const userQuoteAccount = await getAssociatedTokenAddress(
+        quoteMint,
+        ownerPubkey
+      );
+
+      await program.methods
+        .cancelOrder()
+        .accounts({
+          order: orderPubkey,
+          owner: ownerPubkey,
+          market: marketPk,
+          userBaseAccount,
+          userQuoteAccount,
+          baseVault,
+          quoteVault,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .rpc();
+
+      console.log(`  ✅ Closed filled order: ${fill.order.slice(0, 8)}...`);
+      closed++;
+
+      // Wait a bit to avoid rate limiting
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    } catch (error: any) {
+      console.log(
+        `  ⚠️  Failed to close order ${fill.order.slice(0, 8)}...: ${
+          error.message
+        }`
+      );
+      failed++;
+    }
+  }
+
+  console.log(`🧹 Cleanup complete: ${closed} closed, ${failed} failed`);
+  return { closed, failed };
 }
 

@@ -109,6 +109,8 @@ export function matchOrders(orders: Order[]): ExecutionPlan {
       counterparty: ask.pubkey,
       amountIn: matchAmount, // Quote from bid
       amountOut: matchAmount, // Base from ask
+      orderOwner: bid.owner,
+      counterpartyOwner: ask.owner,
     });
 
     // Update remaining amounts
