@@ -12,3 +12,6 @@ target
 **/.next
 **/coverage
 frontend/bun.lock
+build/
+*.arcis
+*.idarc
