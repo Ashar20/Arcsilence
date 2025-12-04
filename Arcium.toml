@@ -1,3 +1,6 @@
 # Arcium project configuration
 # This file configures the Arcium tooling suite
 
+[circuit.match_orders]
+path = "build/match_orders.arcis"
+id   = "match_orders"

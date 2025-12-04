@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "programs/darkpool",
+    "programs/darkpool-mxe",
     "encrypted-ixs",
 ]
 resolver = "2"

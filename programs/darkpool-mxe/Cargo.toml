@@ -1,0 +1,28 @@
+[package]
+name = "darkpool-mxe"
+version = "0.1.0"
+description = "Darkpool MXE wrapper for Arcium MPC order matching"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "darkpool_mxe"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = [
+  "anchor-lang/idl-build",
+  "anchor-spl/idl-build",
+  "arcium-anchor/idl-build"
+]
+
+[dependencies]
+anchor-lang = { workspace = true, features = ["init-if-needed"] }
+anchor-spl = { workspace = true }
+arcium-anchor = "0.4.0"
+arcium-macros = "0.4.0"
+arcium-client = { version = "0.4.0", default-features = false }

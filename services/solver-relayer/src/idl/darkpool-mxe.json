@@ -1,0 +1,128 @@
+{
+  "version": "0.1.0",
+  "name": "darkpool_mxe",
+  "address": "GXMjSxNzrAee7KNdiWfGaUXh783bXyB87aW6TYvmQ3r1",
+  "metadata": {
+    "name": "darkpool_mxe",
+    "version": "0.1.0",
+    "spec": "0.1.0"
+  },
+  "instructions": [
+    {
+      "name": "matchOrders",
+      "discriminator": [17, 1, 201, 93, 7, 51, 251, 134],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mxeAccount",
+          "writable": false,
+          "signer": false
+        },
+        {
+          "name": "signPdaAccount",
+          "writable": true,
+          "signer": false
+        },
+        {
+          "name": "mempoolAccount",
+          "writable": true,
+          "signer": false
+        },
+        {
+          "name": "executingPool",
+          "writable": true,
+          "signer": false
+        },
+        {
+          "name": "computationAccount",
+          "writable": true,
+          "signer": false
+        },
+        {
+          "name": "compDefAccount",
+          "writable": false,
+          "signer": false
+        },
+        {
+          "name": "clusterAccount",
+          "writable": true,
+          "signer": false
+        },
+        {
+          "name": "poolAccount",
+          "writable": true,
+          "signer": false
+        },
+        {
+          "name": "clockAccount",
+          "writable": false,
+          "signer": false
+        },
+        {
+          "name": "systemProgram",
+          "writable": false,
+          "signer": false
+        },
+        {
+          "name": "arciumProgram",
+          "writable": false,
+          "signer": false
+        }
+      ],
+      "args": [
+        {
+          "name": "computationOffset",
+          "type": "u64"
+        },
+        {
+          "name": "ciphertextArrays",
+          "type": {
+            "vec": {
+              "vec": "u8"
+            }
+          }
+        },
+        {
+          "name": "pubKey",
+          "type": {
+            "array": ["u8", 32]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u128"
+        },
+        {
+          "name": "orderCount",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "types": [
+    {
+      "name": "MatchOrdersOutput",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "numFills",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidCiphertextLength",
+      "msg": "Invalid ciphertext length - expected 32 bytes"
+    }
+  ]
+}
+

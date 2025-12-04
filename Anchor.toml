@@ -1,5 +1,6 @@
 [toolchain]
 anchor_version = "0.32.1"
+solana_version = "2.3.0"
 
 [features]
 resolution = true
@@ -7,9 +8,11 @@ skip-lint = false
 
 [programs.devnet]
 darkpool = "5fmg6tuqcGX8ypsTkTfipio9enM9anBR7Wt6TYgSk2Ss"
+darkpool_mxe = "GXMjSxNzrAee7KNdiWfGaUXh783bXyB87aW6TYvmQ3r1"
 
 [programs.localnet]
 darkpool = "5fmg6tuqcGX8ypsTkTfipio9enM9anBR7Wt6TYgSk2Ss"
+darkpool_mxe = "GXMjSxNzrAee7KNdiWfGaUXh783bXyB87aW6TYvmQ3r1"
 
 [registry]
 url = "https://anchor.projectserum.com"

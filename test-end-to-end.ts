@@ -2,7 +2,17 @@ import { Connection, Keypair, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } fro
 import { Program, AnchorProvider, Wallet, BN } from '@coral-xyz/anchor';
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress, createAssociatedTokenAccountInstruction } from '@solana/spl-token';
 import * as fs from 'fs';
-import darkpoolIdl from './target/idl/darkpool.json';
+// Try to load IDL from target/idl first, fallback to services/solver-relayer/src/idl
+let darkpoolIdl: any;
+try {
+  darkpoolIdl = require('./target/idl/darkpool.json');
+} catch {
+  try {
+    darkpoolIdl = require('./services/solver-relayer/src/idl/darkpool.json');
+  } catch {
+    throw new Error('Could not find darkpool.json IDL. Run "anchor build" first.');
+  }
+}
 import axios from 'axios';
 
 const RPC_URL = 'https://api.devnet.solana.com';
@@ -11,8 +21,9 @@ const PROGRAM_ID = new PublicKey('CMy5ru8L5nwnn4RK8TZJiCLs4FVkouV2PKPnuPCLFedB')
 
 // Make IDL use the correct program ID dynamically
 const idl = { ...darkpoolIdl, address: PROGRAM_ID.toBase58() } as any;
-const BASE_TOKEN_MINT = new PublicKey('yXJUy2a1YgKDJ5CfngRN7djwX3Dtbv85f9jUFCgutdj');
-const QUOTE_TOKEN_MINT = new PublicKey('4eYgX7VZj4eQ5Vf5MbmzCgAwcbhkP1rSMhR5jZmdZN5H');
+// Use the fresh market we just created
+const BASE_TOKEN_MINT = new PublicKey('DEpnEY55cvVhwftp5gQxNi3e1idqnD34Azmrr8sUSH2o');
+const QUOTE_TOKEN_MINT = new PublicKey('7K867xquevnX7pQNaxszjW2X5yU2tGF2QMxC785JmpGv');
 const SOLVER_URL = 'http://localhost:8080';
 
 async function sleep(ms: number) {

@@ -2,7 +2,8 @@ import { ExecutionPlan, Order, Fill } from './domain.js';
 import { matchOrders } from './matcher.js';
 import { config } from './config.js';
 import * as anchor from '@coral-xyz/anchor';
-import { PublicKey, Connection, Keypair } from '@solana/web3.js';
+import { PublicKey, Connection, Keypair, SYSVAR_CLOCK_PUBKEY, SystemProgram } from '@solana/web3.js';
+import { Program, Idl } from '@coral-xyz/anchor';
 import BN from 'bn.js';
 import { randomBytes } from 'crypto';
 import { readFileSync } from 'fs';
@@ -22,7 +23,9 @@ import {
   getComputationAccAddress,
   getMXEPublicKey,
   getClusterAccAddress,
+  getFeePoolAccAddress,
 } from '@arcium-hq/client';
+import darkpoolMxeIdl from './idl/darkpool-mxe.json' with { type: 'json' };
 
 export interface ArciumClient {
   computeExecutionPlan(orders: Order[]): Promise<ExecutionPlan>;
@@ -58,6 +61,7 @@ export class RealArciumClient implements ArciumClient {
   private connection: Connection;
   private wallet: Keypair;
   private clusterOffset: number | null;
+  private mxeProgram: anchor.Program<Idl> | null = null;
 
   constructor(
     programId: string,
@@ -69,6 +73,15 @@ export class RealArciumClient implements ArciumClient {
     this.connection = new Connection(rpcUrl, 'confirmed');
     this.wallet = this.loadWallet(walletPath);
     this.clusterOffset = clusterOffset;
+  }
+
+  private getMxeProgram(provider: anchor.AnchorProvider): anchor.Program<Idl> {
+    if (this.mxeProgram) {
+      return this.mxeProgram;
+    }
+    const idl = { ...darkpoolMxeIdl, address: this.programId.toBase58() } as Idl;
+    this.mxeProgram = new anchor.Program(idl, provider);
+    return this.mxeProgram;
   }
 
   private loadWallet(path: string): Keypair {
@@ -176,10 +189,15 @@ export class RealArciumClient implements ArciumClient {
     console.log('[Arcium] Submitting encrypted computation to MPC network...');
 
     try {
-      // Get the comp def offset
-      const compDefOffset = getCompDefAccOffset('match_orders_mpc');
+      // Get the darkpool-mxe program instance
+      const mxeProgram = this.getMxeProgram(provider);
 
-      // Derive all required accounts
+      // Get the comp def offset for match_orders
+      // getCompDefAccOffset returns a Buffer/Uint8Array that needs to be read as Uint32LE
+      const compDefOffsetBuffer = getCompDefAccOffset('match_orders');
+      const compDefOffset = Buffer.from(compDefOffsetBuffer).readUInt32LE();
+
+      // Derive all required Arcium accounts using helper functions
       const computationAccount = getComputationAccAddress(
         this.programId,
         computationOffset
@@ -187,7 +205,30 @@ export class RealArciumClient implements ArciumClient {
       const mxeAccount = getMXEAccAddress(this.programId);
       const mempoolAccount = getMempoolAccAddress(this.programId);
       const executingPoolAccount = getExecutingPoolAccAddress(this.programId);
-      const compDefAccount = getCompDefAccAddress(this.programId, compDefOffset as any);
+      const compDefAccount = getCompDefAccAddress(
+        this.programId,
+        compDefOffset
+      );
+      
+      // Derive signPdaAccount - the #[queue_computation_accounts] macro expects this
+      // It's a PDA derived from the Arcium account base seed "signer"
+      const signPdaSeed = getArciumAccountBaseSeed('signer');
+      const [signPdaAccount] = PublicKey.findProgramAddressSync(
+        [signPdaSeed],
+        this.programId
+      );
+      
+      // Derive poolAccount (FeePool) - no arguments needed
+      const poolAccount = getFeePoolAccAddress();
+      
+      // Get Arcium program address
+      const arciumProgram = getArciumProgAddress();
+      
+      // Clock account is a sysvar
+      const clockAccount = SYSVAR_CLOCK_PUBKEY;
+      
+      // System program
+      const systemProgram = SystemProgram.programId;
 
       console.log('[Arcium] Queueing computation with accounts:', {
         program: this.programId.toBase58(),
@@ -197,52 +238,33 @@ export class RealArciumClient implements ArciumClient {
         compDef: compDefAccount.toBase58(),
       });
 
-      // Build the queue computation instruction with correct discriminator
-      const keys = [
-        { pubkey: computationAccount, isSigner: false, isWritable: true },
-        { pubkey: clusterAccount, isSigner: false, isWritable: true },
-        { pubkey: mxeAccount, isSigner: false, isWritable: false },
-        { pubkey: mempoolAccount, isSigner: false, isWritable: true },
-        { pubkey: executingPoolAccount, isSigner: false, isWritable: true },
-        { pubkey: compDefAccount, isSigner: false, isWritable: false },
-        { pubkey: this.wallet.publicKey, isSigner: true, isWritable: true },
-        { pubkey: anchor.web3.SystemProgram.programId, isSigner: false, isWritable: false },
-      ];
-
-      // Correct discriminator from Arcium IDL: [1, 149, 103, 13, 102, 227, 93, 164]
-      const discriminator = Buffer.from([1, 149, 103, 13, 102, 227, 93, 164]);
-
-      // Serialize ciphertext arrays (vec of vec<u8>)
-      const serializeCiphertextArrays = (ct: Uint8Array[]): Buffer => {
-        const lengthPrefix = Buffer.alloc(4);
-        lengthPrefix.writeUInt32LE(ct.length, 0);
-        const arrays = ct.map(arr => {
-          const len = Buffer.alloc(4);
-          len.writeUInt32LE(arr.length, 0);
-          return Buffer.concat([len, Buffer.from(arr)]);
-        });
-        return Buffer.concat([lengthPrefix, ...arrays]);
-      };
-
-      const data = Buffer.concat([
-        discriminator,
-        computationOffset.toArrayLike(Buffer, 'le', 8),
-        serializeCiphertextArrays(ciphertext as any),
-        Buffer.from(publicKey),
-        Buffer.from(nonce),
-      ]);
-
-      const instruction = new anchor.web3.TransactionInstruction({
-        keys,
-        programId: this.programId,
-        data,
-      });
-
-      const tx = await provider.sendAndConfirm(
-        new anchor.web3.Transaction().add(instruction),
-        [this.wallet],
-        { skipPreflight: false, commitment: 'confirmed' }
-      );
+      // Call the MXE program's matchOrders method (NOT Arcium directly)
+      // This follows the Hello-World pattern: TS calls MXE, MXE calls Arcium
+      // The #[queue_computation_accounts] macro automatically derives all Arcium accounts
+      // We only need to provide the ones that aren't auto-derived via accountsPartial
+      const tx = await mxeProgram.methods
+        .matchOrders(
+          new BN(computationOffset.toString()),
+          instructionData.ciphertextArrays,
+          instructionData.publicKey,
+          instructionData.nonce,
+          new BN(instructionData.orderCount)
+        )
+        .accounts({
+          payer: provider.wallet.publicKey,
+          mxeAccount: mxeAccount,
+          signPdaAccount: signPdaAccount,
+          mempoolAccount: mempoolAccount,
+          executingPool: executingPoolAccount,
+          computationAccount: computationAccount,
+          compDefAccount: compDefAccount,
+          clusterAccount: clusterAccount,
+          poolAccount: poolAccount,
+          clockAccount: clockAccount,
+          systemProgram: systemProgram,
+          arciumProgram: arciumProgram,
+        })
+        .rpc({ skipPreflight: false, commitment: 'confirmed' });
 
       console.log('[Arcium] Computation queued, tx:', tx);
 
@@ -269,52 +291,6 @@ export class RealArciumClient implements ArciumClient {
       throw error; // Don't fallback - fail if MPC doesn't work
     }
 
-    /* OLD FALLBACK CODE (removed):
-
-    const tx = await program.methods
-      .matchOrders(
-        computationOffset,
-        instructionData.ciphertextArrays,
-        instructionData.publicKey,
-        instructionData.nonce,
-        instructionData.orderCount
-      )
-      .accountsPartial({
-        computationAccount: getComputationAccAddress(
-          this.programId,
-          computationOffset
-        ),
-        clusterAccount,
-        mxeAccount: getMXEAccAddress(this.programId),
-        mempoolAccount: getMempoolAccAddress(this.programId),
-        executingPool: getExecutingPoolAccAddress(this.programId),
-        compDefAccount: getCompDefAccAddress(
-          this.programId,
-          Buffer.from(getCompDefAccOffset('match_orders_mpc')).readUInt32LE()
-        ),
-      })
-      .rpc({ skipPreflight: true, commitment: 'confirmed' });
-
-    console.log('[Arcium] Computation queued, tx:', tx);
-
-    // 7. Wait for computation to finalize
-    const finalizeTx = await awaitComputationFinalization(
-      provider,
-      computationOffset,
-      this.programId,
-      'confirmed'
-    );
-    console.log('[Arcium] Computation finalized, tx:', finalizeTx);
-
-    // 8. Decode result (would come from program events/accounts)
-    // For now, return with MPC signature
-    const plan = matchOrders(orders);
-
-    return {
-      ...plan,
-      arciumSignature: finalizeTx,
-    };
-    */
   }
 
   private async getMXEPublicKeyWithRetry(
